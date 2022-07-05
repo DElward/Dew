@@ -51,6 +51,7 @@ echo Copying src...
 xcopy/e/q %ProjHome%\Src %dir%\Src\
 xcopy/e/q %ProjHome%\Run %dir%\Run\
 xcopy/e/q %ProjHome%\Etc %dir%\Etc\
+xcopy/e/q %ProjHome%\.git %dir%\.git\
 rem xcopy/e/q %ProjHome%\js %dir%\js\
 xcopy/e/q %ProjHome%\vsc %dir%\vsc\
 rem xcopy/e/q %ProjHome%\Headers %dir%\Headers\
@@ -60,7 +61,7 @@ type %dir%\PackInfo.txt
 
 echo Zipping...
 pushd %dir%
-C:\D\bin\zip -q -r ..\%dir%.zip *
+C:\D\bin\zip -q -r -S ..\%dir%.zip *
 popd
 
 :CopyDest1

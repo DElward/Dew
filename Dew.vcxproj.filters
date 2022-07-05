@@ -167,6 +167,9 @@
     <None Include="vsc\jitest201.js">
       <Filter>Javascript</Filter>
     </None>
+    <None Include="SaveProjDew.bat">
+      <Filter>Etc</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Run\parms.txt">

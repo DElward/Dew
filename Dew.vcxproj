@@ -270,6 +270,7 @@
     <None Include="Run\oldvsc\jstest02-210111.js" />
     <None Include="Run\oldvsc\jstest02-210224.js" />
     <None Include="Run\oldvsc\jstest02-scratch.js" />
+    <None Include="SaveProjDew.bat" />
     <None Include="vsc\jitest201.js" />
     <None Include="vsc\jstest02.js" />
     <None Include="vsc\jstest03.js" />

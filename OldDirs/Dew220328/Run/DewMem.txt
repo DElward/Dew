@@ -1,0 +1,18 @@
+03/24/22 17:26:49
+
+Number of mallocs not freed           = 6
+Number of mallocs                     = 333
+Number of frees                       = 327
+Number of reallocs prevented by pow2  = 13
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 16
+Number of bytes not freed             = 416
+Number of bytes at high water         = 22112
+
+File Name                                           Line   Bytes       Ptr
+Src\array.c                                           48      32  0xbfdd440 ............A.
+Src\var.c                                            293      32  0xbfdd4d8 p...A.........
+Src\jsexp.c                                           87      32  0xbfdd570 pigs..........
+Src\array.c                                           89     256  0xbfdd608 ~~~~D.......A.
+Src\var.c                                            293      32  0xbfdd780 ....A.........
+Src\jsexp.c                                           87      32  0xbfdd818 goats.........

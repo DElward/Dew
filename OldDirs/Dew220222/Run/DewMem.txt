@@ -1,0 +1,13 @@
+02/17/22 15:16:14
+
+Number of mallocs not freed           = 1
+Number of mallocs                     = 348
+Number of frees                       = 347
+Number of reallocs prevented by pow2  = 17
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 23
+Number of bytes not freed             = 32
+Number of bytes at high water         = 24704
+
+File Name                                           Line   Bytes       Ptr
+Src\jsexp.c                                           94      32 0x29214ea0 Ab............

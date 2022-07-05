@@ -1,0 +1,29 @@
+// JavaScript source code
+// jstest02.js
+
+//  'use strict';
+//  function foo() {
+//      var x = 1;
+//      function bar() {
+//          var y = 2;
+//          console.log(x); // 1 (function `bar` closes over `x`)
+//          console.log(y); // 2 (`y` is in scope)
+//      }
+//      bar();
+//      console.log(x); // 1 (`x` is in scope)
+//      console.log(y); // ReferenceError in strict mode, `y` is scoped to `bar`
+//  }
+//  
+//  foo();
+
+//  var x = 1;
+//  {
+//      var x = 2;
+//  }
+//  console.log(x); // outputs 2
+
+'use strict';
+var msg = "alpha";
+var sfx = "##";
+
+console.log(msg + sfx, sfx + msg + sfx + sfx, msg + sfx);

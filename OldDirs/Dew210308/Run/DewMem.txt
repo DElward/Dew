@@ -1,0 +1,21 @@
+03/04/21 11:29:07
+
+Number of mallocs not freed           = 9
+Number of mallocs                     = 31
+Number of frees                       = 22
+Number of reallocs prevented by pow2  = 1
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 0
+Number of bytes not freed             = 320
+Number of bytes at high water         = 1920
+
+File Name                                           Line   Bytes       Ptr
+Src\var.c                                             27      32 0x249cfc10 ...........$w.
+Src\internal.c                                        35      32 0x249cfca8 ........@..$w.
+Src\var.c                                             39      32 0x249cfd40 ...$w.........
+Src\dbtreec.c                                         52      32 0x249cfdd8 8..$w...8..$w.
+Src\internal.c                                        38      32 0x249cfe70 Console.......
+Src\var.c                                             27      32 0x249cff08 ..............
+Src\internal.c                                       161      32 0x249cffa0 log...........
+Src\dbtreec.c                                        131      64 0x249d0038 ...$w.........
+Src\dbtreec.c                                        132      32 0x249d00f0 log...........

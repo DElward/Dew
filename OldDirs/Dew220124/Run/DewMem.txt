@@ -1,0 +1,14 @@
+01/20/22 17:38:52
+
+Number of mallocs not freed           = 2
+Number of mallocs                     = 390
+Number of frees                       = 388
+Number of reallocs prevented by pow2  = 31
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 13
+Number of bytes not freed             = 96
+Number of bytes at high water         = 22368
+
+File Name                                           Line   Bytes       Ptr
+Src\var.c                                           1642      64 0x22890770 I000..........
+Src\var.c                                           1652      32 0x22890828 log...........

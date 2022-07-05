@@ -1,0 +1,21 @@
+# parms.txt
+
+-showmem
+-jsuse nodejs
+
+# http://support.taurus.com/support/n_releasenotes.html
+# http://support.taurus.com/support/n_releasenotesManage16.html
+# https://www.realclearpolitics.com/?state=nwa
+# http://www.taurus.com
+# file:C:\D\Projects\Dew\Run\simplejs02.htm
+# https://www.google.com
+# https://www.bing.com
+# https://www.yahoo.com/
+# https://www.bridgebase.com
+# file:C:\D\Projects\Dew\Run\BridgeBase.htm
+
+#..\vsc\xeqfil-if-Tests.js
+#..\vsc\xeqfil-while-Tests.js
+
+..\vsc\jstest02.js
+#..\vsc\xeqfil-Tests101-Tests.js

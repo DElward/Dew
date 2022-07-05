@@ -1,0 +1,13 @@
+01/05/22 12:37:17
+
+Number of mallocs not freed           = 1
+Number of mallocs                     = 277
+Number of frees                       = 276
+Number of reallocs prevented by pow2  = 18
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 12
+Number of bytes not freed             = 32
+Number of bytes at high water         = 18880
+
+File Name                                           Line   Bytes       Ptr
+Src\utl.c                                             92      32 0xdb1ebd38 true..........

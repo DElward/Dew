@@ -1,0 +1,430 @@
+<!doctype html>
+<html>
+<head>
+    <title>Bridge Base Online - Play Online Bridge</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="icon" href="/favicon.ico">
+    <meta name="keywords"
+          content="bridge, bridgebase, vugraph, vu-graph, free, bridge club, online bridge, online bridge club, acbl, wbf, rubber bridge, duplicate bridge, money bridge">
+    <meta name="description"
+          content="Free online bridge. Largest bridge site in the world. Duplicate, tournaments, money games, vugraph, more.">
+
+            <link rel="stylesheet" href="//static.bridgebaseonline.com/assets/main.b27da573.css"></link>
+        <link href="https://fonts.googleapis.com/css?family=Lato:100,300,400,700,900&display=swap" rel="stylesheet">
+
+    <script async src="/js/quantcast-cmp.js"></script>
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+        ga('create', 'UA-11095855-4', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <!-- Global site tag (gtag.js) - Google Ads: 641502072 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-641502072"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-641502072');
+    </script>
+            <script defer src="//static.bridgebaseonline.com/assets/0.a5261a50.js"></script>
+            <script defer src="//static.bridgebaseonline.com/assets/main.9973aa54.js"></script>
+    </head>
+<body id="home">
+
+<main>
+    <section id="hero">
+
+        <!-- Top navigation (all devices except XS) -->
+<nav class="navbar" id="navbar-main">
+    <a class="navbar-brand" href="/">
+        <img class="bridge-base-logo" src="/assets/images/logo-bbo-2020-horizontal-transparent.svg" alt="BridgeBase">
+    </a>
+
+    <!-- Button for mobile devices -->
+    <button class="navbar-toggler"
+            id="navbar-toggler"
+            type="button"
+            data-target="navbar-mobile-stack"
+            aria-controls="navbar-mobile-stack"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Non-mobile devices -->
+    <div class="navbar-collapse">
+        <ul class="container navbar-nav">
+            <li class="nav-item hoverable" data-match-body-id="home">
+                <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item hoverable dropdown">
+                <a class="nav-link" href="/v3/?vugraph=y" role="button" id="dropdown-vugraph" data-toggle="dropdown"
+                   aria-haspopup="true" aria-expanded="false">
+                    <div class="d-inline-flex">
+                        <span>VuGraph</span>
+                        <span data-key="vugraph_nb_tables">
+                            <span class="ap ap-chevron-down mt-1 ml-2"></span>
+                        </span>
+                    </div>
+                </a>
+                <div class="dropdown-menu" aria-labelledby="dropdown-vugraph">
+                    <a class="dropdown-item" href="/v3/?vugraph=y">Watch</a>
+                    <a class="dropdown-item" href="/vugraph/schedule.php">Schedule</a>
+                    <a class="dropdown-item" href="/vugraph_archives/vugraph_archives.php">Archives</a>
+                </div>
+            </li>
+            <li class="nav-item hoverable">
+                <a class="nav-link" href="/myhands/">Hand Records</a>
+            </li>
+            <li class="nav-item hoverable">
+                <a class="nav-link" href="/points/">BBO points</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link btn text-white border-white pl-2 pr-2 pt-1 pb-1"
+                   href="/purchase/pay.php">BB&dollar;</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav">
+            <li class="nav-item">
+                <a class="register-button" href="/v3/">
+                    Login / Register
+                </a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Nav for mobile devices only -->
+<nav class="navbar" id="navbar-mobile">
+    <div class="overlay-menu stack-collapsed" id="navbar-mobile-stack">
+        <div class="overlay-menu-content">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link" href="/v3/?vugraph=y" role="button" id="dropdown-vugraph" data-toggle="dropdown"
+                       aria-haspopup="true" aria-expanded="false">
+                        <div class="d-inline-flex">
+                            <span>VuGraph</span>
+                            <span data-key="vugraph_nb_tables">
+                                <span class="ap ap-chevron-down mt-1 ml-2"></span>
+                            </span>
+                        </div>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="dropdown-vugraph">
+                        <a class="dropdown-item" href="/v3/?vugraph=y">Watch</a>
+                        <a class="dropdown-item" href="/vugraph/schedule.php">Schedule</a>
+                        <a class="dropdown-item" href="/vugraph_archives/vugraph_archives.php">Archives</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/myhands/">Hand Records</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/points/">BBO points</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/purchase/pay.php">BB&dollar;</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/v3/">
+                        <button class="register-button" type="button">Login / Register</button>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+        <video
+                id="background-video"
+                poster="/assets/images/img-header@2x.jpg"
+                playsinline
+                muted
+                preload="none"
+        >
+        </video>
+        <div id="video-overlay"></div>
+
+        <div class="text">
+            <h1>Bridge Base Online</h1>
+            <h2>Free, unlimited bridge</h2>
+            <div class="baseline">
+                Social play. <abbr title="American Contract Bridge League">ACBL</abbr> Games. Tournaments. Solitaire.
+            </div>
+            <p id="players-online-text" data-loaded="false">
+                <span class="live-number-wrapper" data-key="mainsite_users">
+                    <strong class="live-number-value">0</strong>
+                </span> players online now,
+                at <span class="live-number-wrapper" data-key="mainsite_tables">
+                    <strong  class="live-number-value">0</strong>
+                </span> tables
+            </p>
+            <div class="call-to-action">
+                <a class="btn btn-primary" href="/v3/">Play bridge now</a>
+            </div>
+            <div id="or-separator">
+                <img src="/assets/images/icon-or.svg" alt="OR">
+            </div>
+        </div>
+    </section>
+    <script>
+        document.querySelector('#hero h1').classList.add('d-none');
+    </script>
+
+    <section id="games">
+        <h1>More games, free, anonymous</h1>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 col-lg-3 mb-3">
+                    <a href="/client/web0.php?cb=FSCQokXnju">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="web0_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-just-play-bridge ap-80 ap-pos-0"></i>
+                                <h3>Just Play Bridge</h3>
+                                <div class="description">
+                                    <p>An infinite stream of hands</p>
+                                    <p>Leaderboard</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3 mb-3">
+                    <a href="/client/web4.php?cb=FSCQokXnju">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="web4_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-bridge-four ap-80 ap-pos-0"></i>
+                                <h3>Bridge 4</h3>
+                                <div class="description">
+                                    <p>Sets of 4 deals</p>
+                                    <p>Leaderboard</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3 mb-3">
+                    <a href="/client/jd0.php?cb=FSCQokXnju">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="webjd_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-just-declare ap-80 ap-pos-0"></i>
+                                <h3>Just Declare</h3>
+                                <div class="description">
+                                    <p>No bidding</p>
+                                    <p>Leaderboard</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3 mb-3">
+                    <a href="/v3/?bridgemaster=y&cb=FSCQokXnju">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="bm_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-bridge-master ap-80 ap-pos-0"></i>
+                                <h3>Bridge Master</h3>
+                                <div class="description">
+                                    <p>Test your play</p>
+                                    <p>5 difficulty levels</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3 mb-3">
+                    <a href="/v3/?g=7">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="anon_mp_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-match-points ap-80 ap-pos-0"></i>
+                                <h3>Matchpoints</h3>
+                                <div class="description">
+                                    <p>Duplicate MPs</p>
+                                    <p>Score comparisons</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3 mb-3">
+                    <a href="/v3/?g=8">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="anon_imp_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-imp ap-80 ap-pos-0"></i>
+                                <h3>IMPs</h3>
+                                <div class="description">
+                                    <p>Duplicate IMPs</p>
+                                    <p>Score comparisons</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-sm-12 col-lg-3 mb-3">
+                    <a href="/v3/">
+                        <div class="card">
+                            <div class="card-header">
+                            <span class="live-number-wrapper" data-key="mainsite_users" data-loaded="false">
+                                <i class="ap ap-avatar"></i>
+                                <span class="live-number-value"></span>
+                            </span>
+                            </div>
+                            <div class="card-body">
+                                <i class="ap ap-users-star ap-80 ap-pos-0"></i>
+                                <h3>Enjoy the full experience</h3>
+                                <div class="description">
+                                    <p>Play with humans</p>
+                                    <p>More games</p>
+                                </div>
+                                <button class="btn btn-primary">Play <i class="ap ap-pos-3 ap-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="community" class="container">
+        <div class="row">
+            <div class="col-lg text order-lg-2">
+                <h1>Community</h1>
+                <h2>Join the community</h2>
+                <p>
+                    Join the largest community of bridge players.<br>
+                    Play with your real life partner, or find a partner online.<br>
+                    Relax and kibitz world class players.<br>
+                    Chat, hang out and meet bridge players from all over the world.<br>
+                </p>
+                <p>
+                    <a href="/v3/" class="btn call-to-action">Join the community</a>
+                </p>
+            </div>
+            <div class="col-lg p-0 order-lg-1">
+                <img class="img-fluid" src="/assets/images/img-community.jpg" alt="Community">
+            </div>
+        </div>
+    </section>
+
+    <section id="masterpoints" class="container">
+        <div class="row">
+            <div class="col-lg text order-lg-1">
+                <h1><abbr title="American Contract Bridge League">ACBL</abbr> Masterpoints</h1>
+                <h2>Win <abbr title="American Contract Bridge League">ACBL</abbr> Masterpoints</h2>
+                <p>
+                    The largest <abbr title="American Contract Bridge League">ACBL</abbr> club in the world.<br>
+                    Simplest and cheapest way to play 24/7 and earn <abbr title="American Contract Bridge League">ACBL</abbr> masterpoints.<br>
+                    Pairs, individuals, play with humans or with robots.<br>
+                    Choose from a large variety of <abbr title="American Contract Bridge League">ACBL</abbr> sanctioned games.<br>
+                    Three annual <abbr title="North American Bridge Championships">NABC</abbr> events.
+                </p>
+                <p>
+                    <a href="/v3/" class="btn call-to-action">Play now</a>
+                </p>
+            </div>
+            <div class="col-lg p-0 order-lg-2">
+                <img class="img-fluid" src="/assets/images/img-win-acbl.jpg" alt="Masterpoints">
+            </div>
+        </div>
+    </section>
+</main>
+
+<aside id="actions" class="container-fluid">
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-sm-6">
+                <figure>
+                    <i class="ap ap-forums ap-80 ap-pos-0"></i>
+                </figure>
+                <h2>Forum</h2>
+                <small>Community discussion boards</small>
+                <a class="btn btn-lg btn-outline-secondary text-white border-white mt-4" href="/forums/">BBO Forums</a>
+            </div>
+            <div class="col-12 col-sm-6 mt-4 mt-sm-0">
+                <figure>
+                    <i class="ap ap-learn ap-80 ap-pos-0"></i>
+                </figure>
+                <h2>Learn</h2>
+                <small>The basics of bridge</small>
+                <a class="btn btn-lg btn-outline-secondary text-white border-white mt-4"
+                   href="https://www.acbl.org/learn_page/" target="_blank">Learn Bridge</a>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<footer class="d-lg-flex justify-content-center">
+    <div>
+        &copy;
+        2021        Bridge Base On Line, LLC.
+    </div>
+    <div class="ml-sm-3">
+        <a href="/intro/introduction.php">About</a> &bull;
+        <a href="/intro/privacy.php">Privacy</a> &bull;
+        <a href="https://online.bridgebase.com/v2/doc_rules.html">Rules</a> &bull;
+        <a href="https://online.bridgebase.com/v2/tcm.html">Terms and Conditions</a> &bull;
+        <a href="https://doc.bridgebase.com/advertise/advertise.shtml">Advertise</a> &bull;
+        <a href="https://online.bridgebase.com/prod/cust_ask_question.php">Support</a> &bull;
+        <a href="/doc/gib_system_notes.php">Robot Convention Card</a>
+    </div>
+</footer>
+
+
+</body>
+</html>
+

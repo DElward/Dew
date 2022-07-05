@@ -1,0 +1,15 @@
+02/03/22 14:42:53
+
+Number of mallocs not freed           = 3
+Number of mallocs                     = 10311
+Number of frees                       = 10308
+Number of reallocs prevented by pow2  = 1794
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 44
+Number of bytes not freed             = 192
+Number of bytes at high water         = 305440
+
+File Name                                           Line   Bytes       Ptr
+Src\var.c                                             52      64 0x93806980 V051O...."..A.
+Src\var.c                                             52      64 0x93806db0 V052O...@k..A.
+Src\var.c                                             52      64 0x93806e68 V053O...@k..A.

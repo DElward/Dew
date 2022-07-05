@@ -1,0 +1,13 @@
+12/31/20 11:28:52
+
+Number of mallocs not freed           = 1
+Number of mallocs                     = 1234
+Number of frees                       = 1233
+Number of reallocs prevented by pow2  = 45
+Number of reallocs reusing same space = 0
+Number of reallocs using new space    = 9
+Number of bytes not freed             = 32
+Number of bytes at high water         = 52224
+
+File Name                                           Line   Bytes       Ptr
+Src\jsexp.c                                         1813      32 0x94555960 log...........

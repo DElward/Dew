@@ -1,0 +1,15 @@
+// JavaScript source code
+// jstest02.js
+
+'use strict';
+
+const aa = [11, ['aa', 'bb', 'cc'], 33];
+//const ss = aa.toString();
+
+console.log("aa=", aa);     // Expecting: aa= (3) [11, Array(3), 33]
+'debug show allvars';
+//console.log("ss=", ss);     // Expecting: ss= 11,aa,bb,cc,33
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+console.log("--end jstest02.js tests--");
+////////////////////////////////////////////////////////////////////////

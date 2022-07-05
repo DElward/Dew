@@ -1,0 +1,44 @@
+================================================================
+07/21/2021
+
+	• Sample C:\D\Projects\Dew\vsc\jstest02.js
+        function func0(arg1) {
+            var nn, tt;
+            'debug show stacktrace';
+            'debug show allvars';
+            console.log("-- arg1:", arg1);
+            nn = 1;
+            tt = 0;
+            while (nn < arg1 + 10) {
+                tt = tt + nn;
+                if (arg1 == nn) {
+                    return tt;
+                }
+                nn = nn + 1;
+            }
+        }
+
+================================================================
+08/08/2020
+
+	• On Tax, download and install Visual Studio Code:
+		https://code.visualstudio.com/
+		Dir: C:\Users\Dave\AppData\Local\Programs\Microsoft VS Code
+
+	• On Garnet, download and install Node.js:
+		https://nodejs.org/en/
+		Dir: C:\Program Files\nodejs\
+
+
+================================================================
+08/06/2020
+
+	• On Garnet, download and install Visual Studio Code:
+		https://code.visualstudio.com/
+		Dir: C:\Users\root\AppData\Local\Programs\Microsoft VS Code
+
+	• On Garnet, download and install Node.js:
+		https://nodejs.org/en/
+		Dir: C:\Program Files\nodejs\
+
+================================================================

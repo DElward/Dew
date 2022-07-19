@@ -392,8 +392,7 @@ void jint_free_Array_subscript(struct jvarvalue_dynamic * jvvy)
 
     jvva = (struct jvarvalue_array *)jvvy->jvvy_this_ptr;
     jvar_free_jvarvalue_array(jvva); /* var: jvva_nRefs = 3, const: jvva_nRefs = 1 */
-
-    jvar_free_jvarvalue_data(jvvy->jvvy_rtn);
+    jvar_free_jvarvalue(jvvy->jvvy_index);
 }
 /***************************************************************/
 int jint_get_Array_subscript(struct jrunexec  * jx,

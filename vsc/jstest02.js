@@ -9,11 +9,26 @@
 
 'use strict';
 
-const person = { firstName: "John", lastName: "Doe", age: 50, eyeColor: "blue", company: { coname: "Taurus Software", cocity : "San Carlos" } };
-let ss = person.company.cocity;
-//let ss = { first: "Taurus", last: "Software" }.first;
-console.log("ss=", ss);
+////////
+//  var ngood = 0;
+//  var nerrs = 0;
+//  var printf = false;
 
+////////////////////////////////////////////////////////////////////////
+// Test 101_30 - 07/19/2022
+////////////////////////////////////////////////////////////////////////
+function func_101_30b(tvers, vob1) {
+    return vob1.co;
+}
+const obj101b_29b = { fn: "Jack", ln: "Long", co: { na: "Taurus", ci: "Belmont", ea: ["Dave", "Andy"] } };
+let ss = func_101_30b('a', obj101b_29b);
+console.log(ss);
+
+//if (func_101_30b(obj101b_29b).ci == "Belmont") { console.log("Good."); }
+
+////////////////////////////////////////////////////////////////////////
+//  if (nerrs == 0) console.log("All", ngood, "tests successful.");
+//  else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);
 ////////////////////////////////////////////////////////////////////////
 console.log("--end jstest02.js tests--");
 //////// End tests ////////

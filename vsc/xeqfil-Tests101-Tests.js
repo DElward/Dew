@@ -14,6 +14,7 @@
 var ngood = 0;
 var nerrs = 0;
 var printf = false;
+//printf = true;
 
 ////////////////////////////////////////////////////////////////////////
 if (printf) console.log("Starting test 101-1...");
@@ -735,6 +736,31 @@ func_101_29(arr101_29, v1101_29c);
 if (arr101_29[0] == 'alpha') ngood = ngood + 1; else { console.log("Test 101_29g failed"); nerrs = nerrs + 1; }
 if (arr101_29[2] == 'gamma') ngood = ngood + 1; else { console.log("Test 101_29h failed"); nerrs = nerrs + 1; }
 if (arr101_29.length == 3) ngood = ngood + 1; else { console.log("Test 101_29i failed"); nerrs = nerrs + 1; }
+////////////////////////////////////////////////////////////////////////
+// Test 101_30 - 07/19/2022
+////////////////////////////////////////////////////////////////////////
+if (printf) console.log("Starting test 101-30...");
+function func_101_30(tvers, vob1) {
+    return vob1.lastName;
+}
+function func_101_30b(tvers, vob1) {
+    return vob1.co;
+}
+let obj101_29 = { firstName: "John", lastName: "Jones" };
+const obj101b_29 = { firstName: "John", lastName: "Doe", age: 50, eyeColor: "blue", company: { coname: "Taurus Software", cocity: "San Carlos" } };
+
+let ss101_29 = func_101_30('a', { firstName: "John", lastName: "Doe" });
+if (ss101_29 == 'Doe') ngood = ngood + 1; else { console.log("Test 101_30a failed"); nerrs = nerrs + 1; }
+ss101_29 = func_101_30('b', obj101_29);
+if (ss101_29 == 'Jones') ngood = ngood + 1; else { console.log("Test 101_30b failed"); nerrs = nerrs + 1; }
+ss101_29 = obj101b_29.company.cocity;
+if (ss101_29 == 'San Carlos') ngood = ngood + 1; else { console.log("Test 101_30c failed"); nerrs = nerrs + 1; }
+if (obj101b_29.company.coname == "Taurus Software") ngood = ngood + 1; else { console.log("Test 101_30d failed"); nerrs = nerrs + 1; }
+if (obj101b_29.eyeColor == "blue") ngood = ngood + 1; else { console.log("Test 101_30e failed"); nerrs = nerrs + 1; }
+if ({ firstName: "John", lastName: "Jones" }.firstName == "John") ngood = ngood + 1; else { console.log("Test 101_30f failed"); nerrs = nerrs + 1; }
+const obj101b_29b = { fn: "Jack", ln: "Long", co: { na: "Taurus", ci: "Belmont", ea: ["Dave", "Andy"] } };
+if (obj101b_29b.co.ea[0] == "Dave") ngood = ngood + 1; else { console.log("Test 101_30e failed"); nerrs = nerrs + 1; }
+if (func_101_30b('f', obj101b_29b).ci == "Belmont") ngood = ngood + 1; else { console.log("Test 101_30f failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

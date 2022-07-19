@@ -22,6 +22,7 @@
 #include "var.h"
 #include "print.h"
 #include "array.h"
+#include "obj.h"
 
 struct jint_module_rec {     /* jmr_ */
     char  * jmr_class_name;
@@ -743,6 +744,27 @@ int jrun_load_type_Array(struct jrunexec * jx)
     return (jstat);
 }
 /***************************************************************/
+#if FIX_220706
+int jrun_load_type_Dynamic(struct jrunexec * jx)
+{
+/*
+** 07/12/2022
+*/
+    int jstat = 0;
+    struct jvarvalue jvv;
+
+    jrun_init_internal_class(jx, JVV_INTERNAL_TYPE_CLASS_Dynamic, NULL, NULL, &jvv);
+
+    jstat = jrun_new_internal_class_method(jx, &jvv, "."     , job_Object_dot     , JCX_FLAG_OPERATION);
+
+    if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
+
+    if (!jstat) jstat = jrun_add_internal_type_object(jx, JVV_DTYPE_DYNAMIC, &jvv);
+
+    return (jstat);
+}
+#endif
+/***************************************************************/
 int jrun_load_type_methods(struct jrunexec * jx)
 {
 /*
@@ -757,6 +779,11 @@ int jrun_load_type_methods(struct jrunexec * jx)
     if (!jstat) {
         jstat = jrun_load_type_Array(jx);
     }
+#if FIX_220706
+    if (!jstat) {
+        jstat = jrun_load_type_Dynamic(jx);
+    }
+#endif
 
     return (jstat);
 }

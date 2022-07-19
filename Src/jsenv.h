@@ -8,10 +8,12 @@
 #define USE_JVV_CHARS_POINTER       1       /* 1 passes tests */
 #define USE_JVARVALUE_IMETHVAR      1       /* 1 passes tests */
 #define PREP_INACTIVE_EXPRESSIONS   1       /* 1 passes tests */
-#define STORE_ON_RETURN             1       /* 1 passes tests */
+#define STORE_ON_RETURN             2       /* 1 passes tests, set to 2 on 07/19/2022 */
 #define FIX_220311                  1       /* 1 passes tests */
 #define LVAL_PARENT                 0       /* 0 and 1 passes tests */
 #define FIX_220406                  0       /* 0 and 1 passes tests */
+#define FIX_220706                  0
+#define FIX_220714                  1
 
 typedef int32 JSINT;
 typedef int32 JSBOOL;
@@ -215,6 +217,9 @@ struct jvarvalue_lval {   /* jvvv_ */
     struct jvarvalue              * jvvv_lval;  /* Points to existing storage */
     struct jcontext               * jvvv_var_jcx;
 #if FIX_220406
+    struct jvarvalue_object       * jvvv_jvvb;
+#endif
+#if FIX_220714
     struct jvarvalue_object       * jvvv_jvvb;
 #endif
 #if LVAL_PARENT

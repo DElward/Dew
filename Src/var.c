@@ -330,6 +330,11 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
                 job_free_jvarvalue_object(jvv->jvv_val.jvv_lval.jvvv_jvvb);
             }
 #endif
+#if FIX_220714
+            if (jvv->jvv_val.jvv_lval.jvvv_jvvb) {
+                job_free_jvarvalue_object(jvv->jvv_val.jvv_lval.jvvv_jvvb);
+            }
+#endif
 #if LVAL_PARENT
             if (jvv->jvv_val.jvv_lval.jvvv_parent) {
                 jvar_free_jvarvalue(jvv->jvv_val.jvv_lval.jvvv_parent);
@@ -1715,7 +1720,6 @@ void free_jvarvalue_dynamic(struct jvarvalue_dynamic * jvvy)
         (jvvy->jvvy_free_proc)(jvvy);
     }
     jvar_free_jvarvalue(jvvy->jvvy_rtn);
-    jvar_free_jvarvalue(jvvy->jvvy_index);
     Free(jvvy);
 }
 /***************************************************************/

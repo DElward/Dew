@@ -30,7 +30,7 @@
 
 #define DEBUG_PRINT_EXP_STACK   0
 #define DEBUG_PRINT_EVAL_RESULT 0
-#define DEBUG_JEXP  3
+#define DEBUG_ASSIGN            0
 
 #define COMPARE(x,y) (((x)==(y))?0:(((x)<(y))?-1:1))
 #define BOOLVAL(b) (((b)==0)?0:1)
@@ -147,7 +147,18 @@ void jvar_store_lval(
 #if FIX_220406
                     jvvtgt->jvv_val.jvv_lval.jvvv_jvvb    = NULL;
 #endif
+#if FIX_220714
+                    jvvtgt->jvv_val.jvv_lval.jvvv_jvvb    = NULL;
+#endif
                     break;
+#if FIX_220714
+                case JVV_DTYPE_OBJECT   :
+                    jvvtgt->jvv_dtype = JVV_DTYPE_LVAL;
+                    jvvtgt->jvv_val.jvv_objptr.jvvp_pval  = jvvsrc;
+                    jvvtgt->jvv_val.jvv_lval.jvvv_var_jcx = NULL;
+                    jvvtgt->jvv_val.jvv_lval.jvvv_jvvb    = NULL;
+                    break;
+#else
                 case JVV_DTYPE_OBJECT   :
                     jvvtgt->jvv_dtype = JVV_DTYPE_LVAL;
                     jvvtgt->jvv_val.jvv_lval.jvvv_lval    = jvvsrc;
@@ -159,6 +170,7 @@ void jvar_store_lval(
                     jvvtgt->jvv_val.jvv_lval.jvvv_jvvb    = NULL;
 #endif
                     break;
+#endif
                 default:
                     break;
             }
@@ -170,6 +182,9 @@ void jvar_store_lval(
         jvvtgt->jvv_val.jvv_lval.jvvv_parent  = NULL;
 #endif
 #if FIX_220406
+        jvvtgt->jvv_val.jvv_lval.jvvv_jvvb    = NULL;
+#endif
+#if FIX_220714
         jvvtgt->jvv_val.jvv_lval.jvvv_jvvb    = NULL;
 #endif
     }
@@ -1489,10 +1504,18 @@ int jvar_assign_jvarvalue(
     int jstat = 0;
     struct jvarvalue * jvv;
 
+#if DEBUG_ASSIGN
+    jexp_quick_print(jx, jvvsrc, "Assign ");
+#endif
+
     jstat = jexp_get_rval(jx, &jvv, jvvsrc);
     if (jstat) return (jstat);
 
     jstat = jvar_store_jvarvalue(jx, jvvtgt, jvv);
+
+#if DEBUG_ASSIGN
+    jexp_quick_print(jx, jvvtgt, "    -> ");
+#endif
 
     return (jstat);
 }
@@ -2965,7 +2988,8 @@ static int jexp_binop_dot(struct jrunexec * jx,
                         cjvv->jvv_val.jvv_objptr.jvvp_pval->jvv_val.jvv_val_array, ajvv1, ajvv2);
                     break;
                 case JVV_DTYPE_OBJECT   :
-                    jstat = jexp_binop_dot_object(jx, cjvv, cjvv->jvv_val.jvv_objptr.jvvp_pval->jvv_val.jvv_val_object, ajvv2);
+                    // old way - jstat = jexp_binop_dot_object(jx, cjvv, cjvv->jvv_val.jvv_objptr.jvvp_pval->jvv_val.jvv_val_object, ajvv2);
+                    jstat = jexp_binop_dot_object(jx, ajvv1, cjvv->jvv_val.jvv_objptr.jvvp_pval->jvv_val.jvv_val_object, ajvv2);
                     break;
                 default:
                     jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_STORE,
@@ -2976,7 +3000,8 @@ static int jexp_binop_dot(struct jrunexec * jx,
             break;
 
         case JVV_DTYPE_OBJECT   :
-            jstat = jexp_binop_dot_object(jx, cjvv, cjvv->jvv_val.jvv_val_object, ajvv2);
+            // old way - jstat = jexp_binop_dot_object(jx, cjvv, cjvv->jvv_val.jvv_val_object, ajvv2);
+            jstat = jexp_binop_dot_object(jx, ajvv1, cjvv->jvv_val.jvv_val_object, ajvv2);
             break;
 
         default:
@@ -3142,7 +3167,7 @@ static void jexp_print_stack(
     char prestr[8];
     char punam[16];
     char info[32];
-    char valstr[32];
+    char valstr[64];
     char ignstr[32];
     char opflagstr[128];
 
@@ -3301,6 +3326,7 @@ static int jexp_eval_stack(
                     /* jvar_free_jvarvalue_data(&(xstack[*depth - 2].xs_jvv));   */
                     (*depth) -= 2;
                     xstack[*depth - 1].xs_ignore = 0;   /* 01/10/2022 */
+        /* if (!jstat) jexp_print_stack(jx, "Stack post-op", xstack, (*depth), precedence, opflags); */       
                 } else {
                     done = 1;
                 }

@@ -65,9 +65,11 @@ static struct jrunexec * jrun_new_jrunexec(int jxflags)
     jx->jx_aerrs            = NULL;
     jx->jx_globals          = NULL;
     jx->jx_global_jcx       = NULL;
+#if 0
     jx->jx_njtls            = 0;
     jx->jx_xjtls            = 0;
     jx->jx_ajtls            = NULL;
+#endif
     jx->jx_nop_xref         = 0;
     jx->jx_aop_xref         = NULL;
     jx->jx_head_jcx         = NULL;    /* 09/22/2021 */
@@ -118,12 +120,14 @@ static void jrun_free_jrunexec(struct jrunexec * jx)
     jint_free_modules(jx);
     jvar_free_jvarrec(jx->jx_globals);
 
+#if 0
     ii = jx->jx_njtls;
     while (ii > 0) {
         ii--;
         jtok_free_jtokenlist(jx->jx_ajtls[ii]);
     }
     Free(jx->jx_ajtls);
+#endif
 
     jrun_clear_all_errors(jx);
     Free(jx->jx_aerrs);
@@ -637,6 +641,7 @@ int jrun_update_xstat(struct jrunexec * jx)
     return (jstat);
 }
 /***************************************************************/
+#ifdef UNUSED
 const char * jrun_next_token_string(struct jrunexec * jx)
 {
 /*
@@ -648,6 +653,7 @@ const char * jrun_next_token_string(struct jrunexec * jx)
         return (jx->jx_jxc.jxc_jtl->jtl_atoks[jx->jx_jxc.jxc_toke_ix]->jtok_text);
     }
 }
+#endif
 /***************************************************************/
 int jrun_next_token(struct jrunexec * jx, struct jtoken ** pjtok)
 {
@@ -681,6 +687,7 @@ int jrun_next_token(struct jrunexec * jx, struct jtoken ** pjtok)
     return (jstat);
 }
 /***************************************************************/
+#ifdef UNUSED
 void jrun_unget_token(struct jrunexec * jx, struct jtoken ** pjtok)
 {
 /*
@@ -691,6 +698,7 @@ void jrun_unget_token(struct jrunexec * jx, struct jtoken ** pjtok)
         (*pjtok) = jx->jx_jxc.jxc_jtl->jtl_atoks[jx->jx_jxc.jxc_toke_ix];
     }
 }
+#endif
 /***************************************************************/
 void jrun_peek_token(struct jrunexec * jx, struct jtoken * jtok)
 {
@@ -706,6 +714,7 @@ void jrun_peek_token(struct jrunexec * jx, struct jtoken * jtok)
     }
 }
 /***************************************************************/
+#if 0
 void jrun_push_jtl(struct jrunexec * jx, struct jtokenlist * jtl)
 {
 /*
@@ -733,6 +742,7 @@ struct jtokenlist * jrun_pop_jtl(struct jrunexec * jx)
 
     return (jtl);
 }
+#endif
 /***************************************************************/
 int jrun_set_strict_mode(struct jrunexec * jx)
 {
@@ -877,17 +887,20 @@ int jenv_xeq_string(struct jsenv * jse, const char * jsstr)
 **
 */
     int jstat = 0;
+    int tflags;
+    int tcharslen;
     struct jtokenlist * jtl;
 
-    jstat = jtok_create_tokenlist(jse->jse_jx, jsstr, &jtl, 3);
+    tflags = (JTOK_CRE_FLAG_ADD_OPEN | JTOK_CRE_FLAG_ADD_CLOSE);
+    jstat = jtok_create_tokenlist(jse->jse_jx, jsstr, &jtl, &tcharslen, tflags);
 
     if (!jstat) {
-        jrun_push_jtl(jse->jse_jx, jtl);
+        /* jrun_push_jtl(jse->jse_jx, jtl); */
         jrun_setcursor(jse->jse_jx, jtl, 0);
         jstat = jrun_exec_jrunexec(jse->jse_jx);
     }
 
-    jtl = jrun_pop_jtl(jse->jse_jx);
+    /* jtl = jrun_pop_jtl(jse->jse_jx); */
     jtok_free_jtokenlist(jtl);
 
     return (jstat);

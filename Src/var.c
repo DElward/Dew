@@ -283,7 +283,7 @@ static void jvvl_free_jvarvalue_imethvar_data(struct jvarvalue_imethvar * jvvimv
 }
 /***************************************************************/
 #if USE_JVV_CHARS_POINTER
-struct jvarvalue_chars * jvar_new_jvarvalue_chars(void)
+struct jvarvalue_chars * jvar_new_jvarvalue_chars()
 {
 /*
 ** 03/15/2022
@@ -325,21 +325,9 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
 
         case JVV_DTYPE_LVAL :
             jvv->jvv_dtype = JVV_DTYPE_NONE;
-#if FIX_220406
             if (jvv->jvv_val.jvv_lval.jvvv_jvvb) {
                 job_free_jvarvalue_object(jvv->jvv_val.jvv_lval.jvvv_jvvb);
             }
-#endif
-#if FIX_220714
-            if (jvv->jvv_val.jvv_lval.jvvv_jvvb) {
-                job_free_jvarvalue_object(jvv->jvv_val.jvv_lval.jvvv_jvvb);
-            }
-#endif
-#if LVAL_PARENT
-            if (jvv->jvv_val.jvv_lval.jvvv_parent) {
-                jvar_free_jvarvalue(jvv->jvv_val.jvv_lval.jvvv_parent);
-            }
-#endif
             break;
 
         case JVV_DTYPE_CHARS :

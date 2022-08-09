@@ -155,6 +155,7 @@ enum e_js_punctuator {
     JSPU_BAR_BAR              ,    /* "||"   */
     JSPU_CLOSE_BRACE          ,    /* "}"    */
     JSPU_TILDE                ,    /* "~"    */
+    JSPU__EOF                 ,    /*end of file */
     JSPU_ZZ_LAST              };
 
 /***************************************************************/
@@ -202,6 +203,8 @@ struct jtoken {   /* jtok */
     short   jtok__unused__;
 };
 
+#define JTOK_CHAR_TEMPLATE  '`'
+
 #define JTOK_FIRST_ID_CHAR(c) (isalpha(c) || (c) == '_' || (c) == '$')
 #define JTOK_ID_CHAR(c) (isalnum(c) || (c) == '_' || (c) == '$')
 #define JTOK_ISSPACE_CHAR(c) ((c) == ' ' || (c) == '\t' || (c) == '\v' || (c) == '\f' || (c) == '\xA0')
@@ -220,21 +223,26 @@ struct jtoken {   /* jtok */
 #define JTOK_BLOCK_END_CHAR(c) ((c) == '}')
 #define JTOK_STMT_END_CHAR(c) ((c) == ';')
 
+#define JTOK_CRE_FLAG_ADD_OPEN          1
+#define JTOK_CRE_FLAG_ADD_CLOSE         2
+#define JTOK_CRE_FLAG_STOP_AT_BRACE     4
+
 /***************************************************************/
 struct jtoken * jtok_new_jtoken(void);
 void jtok_free_jtoken(struct jtoken * jtok);
 int jtok_create_tokenlist(struct jrunexec * jx,
-    const char * jsstr,
-    struct jtokenlist ** pjtl,
-    int tflags);
+                            const char * jstr,
+                            struct jtokenlist ** pjtl,
+                            int * tcharslen,
+                            int tflags);
 void jtok_free_jtokenlist(struct jtokenlist * jtl);
 void jrun_find_punctuator_name_by_pu(short pu, char * punam);
 struct jtokeninfo * jtok_new_jtokeninfo(enum e_jti_type titype);
-const char * jrun_next_token_string(struct jrunexec * jx);
+/* const char * jrun_next_token_string(struct jrunexec * jx); */
 struct jtifuncoper * jrun_new_jtifuncoper(void);            /* 01/29/2022 */
 void jrun_free_jtifuncoper(struct jtifuncoper * jtifo);     /* 01/29/2022 */
 struct jtiopenbrace * jrun_new_jtiopenbrace(void);          /* 01/31/2022 */
 void jrun_free_jtiopenbrace(struct jtiopenbrace * jtifo);   /* 01/31/2022 */
-
+struct jtoken * jtok_eof_token(void);   /* 08/08/2022 */
 /***************************************************************/
 #endif /* JSTOKH_INCLUDED */

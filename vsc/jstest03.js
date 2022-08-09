@@ -1188,3 +1188,20 @@ let ff = yy;
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);
 
+////////////////////////////////////////////////////////////////////////
+////    08/01/2022
+////////////////////////////////////////////////////////////////////////
+var book = new Object( );
+book.title = "JavaScript: The Definitive Guide";
+book.chapter1 = new Object();
+book.chapter1.title = "Introduction to JavaScript";
+book.chapter1.pages = 19;
+book.chapter2 = { title: "Lexical Structure", pages: 6 };
+console.log(book);
+////////////////////////////////////////////////////////////////////////
+var ss = new Number(23);
+var ii = ss;
+ss = ss + 2;
+console.log("ii=", ii, "typeof ii=", typeof ii);
+console.log("ss=", ss, "typeof ss=", typeof ss);
+////////////////////////////////////////////////////////////////////////

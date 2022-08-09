@@ -15,17 +15,9 @@
 //  var printf = false;
 
 ////////////////////////////////////////////////////////////////////////
-// Test 101_30 - 07/19/2022
-////////////////////////////////////////////////////////////////////////
-function func_101_30b(tvers, vob1) {
-    return vob1.co;
-}
-const obj101b_29b = { fn: "Jack", ln: "Long", co: { na: "Taurus", ci: "Belmont", ea: ["Dave", "Andy"] } };
-let ss = func_101_30b('a', obj101b_29b);
-console.log(ss);
-
-//if (func_101_30b(obj101b_29b).ci == "Belmont") { console.log("Good."); }
-
+let v101_31a = "abcdefghiKlmnopqrsT";
+var v101_31j = `xy${`12${v101_31a}34`}z`;
+console.log("v101_31j=", v101_31j);     // Exp: v101_31j= xy12abcdefghiKlmnopqrsT34z
 ////////////////////////////////////////////////////////////////////////
 //  if (nerrs == 0) console.log("All", ngood, "tests successful.");
 //  else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);
@@ -33,3 +25,4 @@ console.log(ss);
 console.log("--end jstest02.js tests--");
 //////// End tests ////////
 ////////////////////////////////////////////////////////////////////////
+

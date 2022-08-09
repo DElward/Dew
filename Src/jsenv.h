@@ -4,16 +4,9 @@
 /* jsenv.h                                                     */
 /***************************************************************/
 
-#define USE_OLD_JVARVALUE_OBJPTR    0       /* 0 passes tests */
 #define USE_JVV_CHARS_POINTER       1       /* 1 passes tests */
 #define USE_JVARVALUE_IMETHVAR      1       /* 1 passes tests */
 #define PREP_INACTIVE_EXPRESSIONS   1       /* 1 passes tests */
-#define STORE_ON_RETURN             2       /* 1 passes tests, set to 2 on 07/19/2022 */
-#define FIX_220311                  1       /* 1 passes tests */
-#define LVAL_PARENT                 0       /* 0 and 1 passes tests */
-#define FIX_220406                  0       /* 0 and 1 passes tests */
-#define FIX_220706                  0
-#define FIX_220714                  1
 
 typedef int32 JSINT;
 typedef int32 JSBOOL;
@@ -132,7 +125,9 @@ struct jvarvalue_chars {   /* jvvc_ */
     char *  jvvc_val_chars;
     int     jvvc_length;
     int     jvvc_size;
+    /* int     jvvc_flags; */
 };
+/* #define JVVC_FLAG_TEMPLATE      1 */
 
 struct jvarvalue_token {   /* jvvt_ */
     char *  jvvt_token;
@@ -216,15 +211,7 @@ struct jvarvalue_function {   /* jvvf_ */
 struct jvarvalue_lval {   /* jvvv_ */
     struct jvarvalue              * jvvv_lval;  /* Points to existing storage */
     struct jcontext               * jvvv_var_jcx;
-#if FIX_220406
     struct jvarvalue_object       * jvvv_jvvb;
-#endif
-#if FIX_220714
-    struct jvarvalue_object       * jvvv_jvvb;
-#endif
-#if LVAL_PARENT
-    struct jvarvalue              * jvvv_parent;
-#endif
 };
 
 struct jvarvalue_funcvar {   /* jvvfv_ */     /* Move into jvarvalue_objptr */
@@ -379,9 +366,11 @@ struct jrunexec {   /* jx_ */
     struct jerror  **       jx_aerrs;
     struct jvarrec *        jx_globals;
     struct jcontext *       jx_global_jcx;
+#if 0
     int                     jx_njtls;
     int                     jx_xjtls;
     struct jtokenlist **    jx_ajtls;
+#endif
     int                     jx_nop_xref;
     short                 * jx_aop_xref;
     struct jcontext       * jx_head_jcx;                    /* 09/22/2021 */
@@ -488,6 +477,7 @@ int jrun_set_strict_mode(struct jrunexec * jx);
 int jrun_set_xstat(struct jrunexec * jx, int xstat);    /* 01/16/2022 */
 struct jxcursor * jrun_new_jxcursor(void);              /* 01/28/2022 */
 void jrun_free_jxcursor(struct jxcursor * jxc);         /* 01/28/2022 */
+void jrun_setcursor(struct jrunexec * jx, struct jtokenlist * jtl, int tokix);
 
 /***************************************************************/
 #endif /* JSENVH_INCLUDED */

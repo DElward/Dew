@@ -488,42 +488,6 @@ int jpr_object_tostring(
     return (jstat);
 }
 /***************************************************************/
-int job_Object_dot(
-        struct jrunexec  * jx,
-        const char       * func_name,
-        void             * this_ptr,
-        struct jvarvalue * jvvlargs,
-        struct jvarvalue * jvvrtn)
-{
-/*
-** 07/12/2022
-*/
-    int jstat = 0;
-#if FIX_220706
-    struct jvarvalue_dynamic * jvvy;
-
-    if (!this_ptr) {
-        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_NULL_OBJECT,
-            "Null object passed to %s()", func_name);
-        return (jstat);
-    }
-
-    jvvy = new_jvarvalue_dynamic();
-    jvvy->jvvy_this_ptr  = this_ptr;
-    jvvy->jvvy_get_proc = NULL; // jint_get_Array_length;
-    jvvy->jvvy_set_proc = NULL; // jint_set_Array_length;
-    jvvy->jvvy_free_proc = NULL;
-    jvvy->jvvy_arg       = NULL;
-    jvvy->jvvy_rtn = jvar_new_jvarvalue();
-
-    jvvrtn->jvv_dtype = JVV_DTYPE_DYNAMIC;
-    jvvrtn->jvv_val.jvv_val_dynamic = jvvy;
-#endif
-
-    return (jstat);
-}
-/***************************************************************/
-#if ! FIX_220706
 int jexp_binop_dot_object(struct jrunexec * jx,
     struct jvarvalue * jvvobject,
     struct jvarvalue_object * jvvb,
@@ -561,142 +525,12 @@ int jexp_binop_dot_object(struct jrunexec * jx,
             jvar_free_jvarvalue_data(jvvobject);
             jvar_store_lval(jx, jvvobject, jvvsrc, NULL);
             /* jexp_quick_print(jx, jvvobject, "Object dot "); */
-#if FIX_220406
             if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
                 jvvobject->jvv_val.jvv_lval.jvvv_jvvb = jvvb;
             }
-#endif
-#if FIX_220714
-            if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
-                jvvobject->jvv_val.jvv_lval.jvvv_jvvb = jvvb;
-            }
-#endif
-#if LVAL_PARENT
-            if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
-                jvvobject->jvv_val.jvv_lval.jvvv_parent = jvar_new_jvarvalue();
-                jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_dtype = JVV_DTYPE_OBJECT;
-                jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_val.jvv_val_object = jvvb;
-            }
-#endif
         }
     }
 
     return (jstat);
 }
-/***************************************************************/
-#else   /* FIX_220706 */
-/***************************************************************/
-void jint_free_Object_member(struct jvarvalue_dynamic * jvvy)
-{
-/*
-** 07/06/2022
-*/
-    struct jvarvalue_object * jvvb;
-
-    jvvb = (struct jvarvalue_object *)jvvy->jvvy_this_ptr;
-    job_free_jvarvalue_object(jvvb);
-}
-/***************************************************************/
-int jint_get_Object_member(struct jrunexec  * jx,
-         struct jvarvalue_dynamic * jvvy,
-         struct jvarvalue  * arg,
-         struct jvarvalue ** prtnjvv)
-{
-/*
-** 07/06/2022
-*/
-    int jstat = 0;
-    struct jvarvalue_object * jvvb;
-
-    jvvb = (struct jvarvalue_object *)jvvy->jvvy_this_ptr;
-    //INCOBJREFS(jvvb);
-    jstat = jvar_store_jvarvalue(jx, jvvy->jvvy_rtn, jvvy->jvvy_index);
-    (*prtnjvv) = jvvy->jvvy_rtn;
-
-    return (jstat);
-}
-/***************************************************************/
-int jint_set_Object_member(struct jrunexec  * jx,
-         struct jvarvalue_dynamic * jvvy,
-         struct jvarvalue  * arg,
-         struct jvarvalue  * jvv)
-{
-/*
-** 07/06/2022
-*/
-    int jstat = 0;
-    struct jvarvalue_array * jvva;
-    int ix;
-
-    jvva = (struct jvarvalue_array *)jvvy->jvvy_this_ptr;
-    if (jvvy->jvvy_index->jvv_dtype != JVV_DTYPE_JSINT) {
-        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_ARRAY_SIZE,
-            "Invalid array index type. Type=%s", jvar_get_dtype_name(jvvy->jvvy_index->jvv_dtype));
-    } else {
-        ix = jvvy->jvvy_index->jvv_val.jvv_val_jsint;
-        if (ix < 0) {
-            jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_ARRAY_SIZE,
-                "Invalid array index. Found: %d", ix);
-        } else {
-            jvar_free_jvarvalue_data(jvv);  /* 02/17/2022 */
-        }
-    }
-    //DECARRAYREFS(jvva);
-
-    return (jstat);
-}
-/***************************************************************/
-int jexp_binop_dot_object(struct jrunexec * jx,
-    struct jvarvalue * jvvobject,
-    struct jvarvalue_object * jvvb,
-    struct jvarvalue * jvvfield)
-{
-/*
-** 07/06/2022
-*/
-    int jstat = 0;
-    int * pvix;
-    struct jvarvalue * jvvsrc;
-    struct jvarvalue_dynamic * jvvy;
-
-#if IS_DEBUG
-    /* jvv_dtype should be checked before getting here. */
-    if (jvvfield->jvv_dtype != JVV_DTYPE_TOKEN) {
-        jstat = jrun_set_error(jx, errtyp_InternalError, JSERR_INTERNAL_ERROR,
-            "Internal error: Expecting identifier after dot.");
-        return (jstat);
-    }
-#endif
-
-    pvix = jvar_find_in_jvarrec(jvvb->jvvb_vars, jvvfield->jvv_val.jvv_val_token.jvvt_token);
-    if (!pvix) {
-        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_OBJECT_MEMBER_NOT_FOUND,
-            "Object member '%s' not found.", 
-            jvvfield->jvv_val.jvv_val_token.jvvt_token);
-    } else {
-        jvvsrc = jvar_get_jvv_from_vix(jx, jvvb->jvvb_jcx, *pvix);
-        if (!jvvsrc) {
-            jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INTERNAL_ERROR,
-                "Object member '%s' is null.", 
-                jvvfield->jvv_val.jvv_val_token.jvvt_token);
-        } else {
-            INCOBJREFS(jvvb);
-            jvar_free_jvarvalue_data(jvvobject);
-            jvvy = new_jvarvalue_dynamic();
-            jvvy->jvvy_this_ptr  = jvvb;
-            jvvy->jvvy_get_proc  = jint_get_Object_member;
-            jvvy->jvvy_set_proc  = jint_set_Object_member;
-            jvvy->jvvy_free_proc = jint_free_Object_member;
-            jvvy->jvvy_arg       = NULL;
-            jvvy->jvvy_index     = jvvsrc;
-            jvvy->jvvy_rtn       = jvar_new_jvarvalue();
-
-            jvvobject->jvv_dtype = JVV_DTYPE_DYNAMIC;
-            jvvobject->jvv_val.jvv_val_dynamic = jvvy;
-        }
-    }
-
-    return (jstat);
-}
-#endif  /* FIX_220706 */
 /***************************************************************/

@@ -19,10 +19,12 @@
 #define JFMT_ORIGIN_FORMAT              0x000020
 #define JFMT_ORIGIN_TOSTRING            0x000030
 #define JFMT_ORIGIN_TOCHARS             0x000040
+#define JFMT_ORIGIN_INTERPOLATE         0x000080
+#define JFMT_ORIGIN_EVAL                0x000100
 
 /* filters - bits - for jpr_vartype_matches() */
-#define JFMT_FILTER_VARS                0x000100
-#define JFMT_FILTER_CLASSES             0x000200
+#define JFMT_FILTER_VARS               0x1000000
+#define JFMT_FILTER_CLASSES            0x2000000
 
 /* flags - bits */
 #define JFMT_FLAG_SHOW_TYPE             0x001000
@@ -39,7 +41,7 @@
 #define JFMT_FLAGS_NOT_FMT_MASK         0xfffff0
 #define EXTRACT_JFMT_FMT(f) ((f) & JFMT_FLAGS_FMT_MASK)
 
-#define JFMT_FLAGS_ORIGIN_MASK          0x0000f0
+#define JFMT_FLAGS_ORIGIN_MASK          0x000ff0
 #define EXTRACT_JFMT_ORIGIN(f) ((f) & JFMT_FLAGS_ORIGIN_MASK)
 
 #define NAN_DISPLAY_STRING              "NaN"
@@ -69,5 +71,12 @@ int jpr_jvarvalue_tocharstar(
     struct jvarvalue * jvv,
     int vflags);
 int jpr_exec_debug_show_allvars(struct jrunexec * jx, int show_flags);
+int jvar_interpolate_chars(
+    struct jrunexec * jx,
+    const char * jchars,
+    int jcharslen,
+    char ** p_strval,
+    int * p_strvallen); /* 08/02/2022 */
+
 /***************************************************************/
 #endif /* PRINTH_INCLUDED */

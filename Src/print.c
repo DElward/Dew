@@ -862,3 +862,214 @@ int jpr_exec_debug_show(
     return (jstat);
 }
 /***************************************************************/
+int jvar_eval_string(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    const char * tchars,
+    int * tcharslen,
+    int tflags)
+{
+/*
+** 08/02/2022
+*/
+    int jstat = 0;
+    struct jtokenlist * jtl;
+    struct jxcursor jxc;
+    struct jtoken * jtok;
+
+    jstat = jtok_create_tokenlist(jx, tchars, &jtl, tcharslen, tflags);
+
+    if (!jstat) {
+        jrun_copy_current_jxc(jx, &jxc);
+        jrun_setcursor(jx, jtl, 0);
+        jstat = jrun_next_token(jx, &jtok);
+        if (!jstat) {
+            jstat = jexp_evaluate(jx, &jtok, jvv);
+        }
+
+        jrun_set_current_jxc(jx, &jxc);
+    }
+
+    jtok_free_jtokenlist(jtl);
+
+    return (jstat);
+}
+/***************************************************************/
+void jvar_insert_interpolated_string(
+    char ** p_tchars,
+    int   * p_tcharlen,
+    int   * p_tcharmax,
+    int     tcharix,
+    int     xlen,
+    char  * ibuf,
+    int     ilen)
+{
+/*
+** 08/08/2022
+**
+** Example 1:   AGE=29
+**  I am ${AGE} years old.
+**  0000000000111111111122
+**  0123456789012345678901
+**      p_tcharlen  = 22
+**      tcharix     = 5
+**      xlen        = 6
+**      ibuf        = 25
+**      ilen        = 2
+**      diff        = -4
+**
+** Example 2:   UN="years old"
+**  I am 29 ${UN}.
+**  00000000001111
+**  01234567890123
+**      p_tcharlen  = 14
+**      tcharix     = 8
+**      xlen        = 5
+**      ibuf        = years old
+**      ilen        = 9
+**      diff        = 4
+**  I am 29 years old.
+**  000000000011111111
+**  012345678901234567
+*/
+    int diff;
+
+    diff = ilen - xlen;
+
+    if (diff > 0)  {
+        if ((*p_tcharlen) + diff >= (*p_tcharmax)) {
+            (*p_tcharmax) = (*p_tcharmax) + diff + 16;
+        }
+        (*p_tchars) = Realloc((*p_tchars), char, (*p_tcharmax));
+    }
+
+    memmove(
+        (*p_tchars) + tcharix + xlen + diff,
+        (*p_tchars) + tcharix + xlen,
+        (*p_tcharlen) - (tcharix + xlen) + 1);
+    
+    memcpy((*p_tchars) + tcharix, ibuf, ilen);
+    (*p_tcharlen) += diff;
+}
+/***************************************************************/
+int jvar_interpolate(
+    struct jrunexec * jx,
+    char ** p_tchars,
+    int * p_tcharlen,
+    int * p_tcharmax,
+    int * p_tcharix)
+{
+/*
+** 08/04/2022
+*/
+    int jstat = 0;
+    char * prbuf;
+    int prlen;
+    int prmax;
+    int jfmtflags;
+    int tcharslen;
+    int xlen;
+    int newix;
+    struct jvarvalue jvv;
+
+    prbuf = NULL;
+    prlen = 0;
+    prmax = 0;
+    jfmtflags = JFMT_ORIGIN_INTERPOLATE;
+
+    INIT_JVARVALUE(&(jvv));
+    jstat = jvar_eval_string(jx, &jvv, (*p_tchars) + (*p_tcharix), &tcharslen, JTOK_CRE_FLAG_STOP_AT_BRACE);
+    if (!jstat) {
+        jstat = jpr_jvarvalue_tostring(jx, &prbuf, &prlen, &prmax, &jvv, JFMT_ORIGIN_INTERPOLATE);
+        if (!jstat) {
+            xlen = tcharslen + 3;   /* Add 3 for $, {, } */
+            newix = (*p_tcharix) - 2 + prlen;
+            jvar_insert_interpolated_string(p_tchars, p_tcharlen, p_tcharmax, (*p_tcharix) - 2, xlen,
+                prbuf, prlen);
+            (*p_tcharix) = newix;
+        }
+        Free(prbuf);
+    }
+
+    return (jstat);
+}
+/***************************************************************/
+int jvar_find_interpolate(
+        struct jrunexec * jx,
+        char * jchars,
+        int tcharix,
+        int * p_tcharlen)
+{
+/*
+** 08/08/2022
+*/
+    int ix;
+    int jix;
+
+    jix = tcharix;
+    ix = -1;
+
+    while (jchars[jix] && ix < 0) {
+        if (jchars[jix] == '\\') {
+            if (jchars[jix+1] == '\\' || jchars[jix+1] == '$') {
+                memmove(jchars + jix, jchars + jix + 1, (*p_tcharlen) - jix);
+                (*p_tcharlen) -= 1;
+            }
+            jix++;
+        } else if (jchars[jix] == '$' && jchars[jix+1] == '{') {
+            ix = jix + 2;
+        } else {
+            jix++;
+        }
+    }
+
+    return (ix);
+}
+/***************************************************************/
+int jvar_interpolate_chars(
+    struct jrunexec * jx,
+    const char * jchars,
+    int jcharslen,
+    char ** p_strval,
+    int * p_strvallen)
+{
+/*
+** 08/02/2022
+*/
+    int jstat = 0;
+    int done;
+    int tcharix;
+    int tcharmax;
+    int tcharlen;
+    char * tchars;
+    int bix;
+
+    done = 0;
+    tcharix  = 0;
+    tcharmax = jcharslen + JVARVALUE_CHARS_MIN;
+    tchars = New(char, tcharmax);
+    memcpy(tchars, jchars, jcharslen);
+    tcharlen = jcharslen;
+    tchars[tcharlen] = '\0';
+
+    while (!done) {
+        bix = jvar_find_interpolate(jx, tchars, tcharix, &tcharlen);
+        if (bix >= 0) {
+            tcharix = bix;
+            jstat = jvar_interpolate(jx, &tchars, &tcharlen, &tcharmax, &tcharix);
+        } else {
+            done = 1;
+        }
+    }
+
+    (*p_strval) = tchars;
+    (*p_strvallen) = tcharlen;
+
+    //  (*p_strval) = New(char, jcharslen + 1);
+    //  memcpy((*p_strval), jchars, jcharslen);
+    //  (*p_strval)[jcharslen] = '\0';
+    //  (*p_strvallen) = jcharslen;
+
+    return (jstat);
+}
+/***************************************************************/

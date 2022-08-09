@@ -9,6 +9,7 @@
 #define JERR_STOPPED                            (-3)
 #define JERR_EXIT                               (-4)
 #define JERR_RETURN                             (-5)
+#define JERR_CLOSE_BRACE                        (-6)
 
 #define JSERR_UNMATCHED_QUOTE                   (-9801)
 #define JSERR_INVALID_ESCAPE                    (-9802)
@@ -63,6 +64,7 @@
 #define JSERR_OPERATOR_REQUIRES_LVAL            (-9851)
 #define JSERR_OBJECT_MEMBER_NOT_FOUND           (-9852)
 #define JSERR_OBJECT_POINTER                    (-9853)
+#define JSERR_NO_CLOSE_BRACE                    (-9854)
 
 #define JSERR_RUNTIME_STACK_OVERFLOW            (-7801)
 #define JSERR_RUNTIME_STACK_UNDERFLOW           (-7802)

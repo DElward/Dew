@@ -596,7 +596,7 @@ static HTMLC jtok_xlate_backslash(struct jrunexec * jx,
         case '\"':      out = '\"'; break; /* double quote */
 
         default:
-            (*is_err) = 1;
+            if (isalnum(jchar)) (*is_err) = 1;  /* 08/08/2022 - added if isalnum */
             out = jchar;
             break;
     }
@@ -676,6 +676,62 @@ static int jtok_get_token_quote(struct jrunexec * jx,
                 (*jstrix)++;
                 jchar = jtok_xlate_backslash(jx, jstr, jstrix, &is_err);
                 jtok_append_token(jtok, jchar);
+                if (is_err) {
+                    done = 1;
+                    jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_ESCAPE,
+                            "Invalid escape sequence");
+                    jtok->jtok_typ = JSW_ERROR;
+                }
+            }
+        } else {
+            jchar = jtok_get_char(jx, jstr, jstrix);
+            if (!jchar) {
+                done = 1;
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNMATCHED_QUOTE,
+                        "Unmatched quotation");
+                jtok->jtok_typ = JSW_ERROR;
+            } else {
+                if (jchar == qchar) done = 1;
+                jtok_append_token(jtok, jchar);
+            }
+        }
+    }
+    jtok_append_token_null(jtok);
+
+    return (jstat);
+}
+/***************************************************************/
+static int jtok_get_token_template(struct jrunexec * jx,
+        HTMLC qchar,
+        struct jtoken * jtok,
+        const char * jstr,
+        int * jstrix)
+{
+/*
+** 08/08/2022
+*/
+    int jstat = 0;
+    int done;
+    int is_err;
+    HTMLC jchar;
+
+    done = 0;
+    jtok_append_token(jtok, qchar);
+
+    while (!done) {
+        if (JTOK_CURRENT_CHAR(jstr,jstrix) == '\\') {
+            jchar = JTOK_NEXT_CHAR(jstr, jstrix);
+            if (JTOK_LINETERM_CHAR(jchar)) {
+                (*jstrix) += 2;    /* skip '\n' or '\r' */
+            } else if (jchar == '$') {  /* 08/08/2022 */
+                jtok_append_token(jtok, '\\');
+                (*jstrix)++;
+            } else {
+                (*jstrix)++;
+                jchar = jtok_xlate_backslash(jx, jstr, jstrix, &is_err);
+                jtok_append_token(jtok, jchar);
+                if (jchar == '\\') /* 08/08/2022 */
+                    jtok_append_token(jtok, '\\');
                 if (is_err) {
                     done = 1;
                     jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_ESCAPE,
@@ -955,6 +1011,9 @@ int jtok_get_token(struct jrunexec * jx,
     } else if (JTOK_QUOTE_CHAR(jchar)) {
         jstat = jtok_get_token_quote(jx, jchar, jtok, jstr, jstrix);
         jtok->jtok_typ = JSW_STRING;
+    } else if (jchar == JTOK_CHAR_TEMPLATE) {
+        jstat = jtok_get_token_template(jx, jchar, jtok, jstr, jstrix);
+        jtok->jtok_typ = JSW_STRING;
     } else if (jchar == '\\') {
         jstat = jtok_get_backslashed_token(jx, jtok, jstr, jstrix);
     } else if (jchar == '.' && isdigit(JTOK_CURRENT_CHAR(jstr, jstrix))) {
@@ -1150,22 +1209,27 @@ void jtok_print_tokenlist(struct jtokenlist * jtl)
 int jtok_create_tokenlist(  struct jrunexec * jx,
                             const char * jstr,
                             struct jtokenlist ** pjtl,
+                            int * tcharslen,
                             int tflags)
 {
 /*
 ** tflags bits:
-**      1 - Added { at beginning
-**      2 - Added } at end
+**      1 - JTOK_CRE_FLAG_ADD_OPEN      - Add { at beginning
+**      2 - JTOK_CRE_FLAG_ADD_CLOSE     - Add } at end
+**      4 - JTOK_CRE_FLAG_STOP_AT_BRACE - Stop at }
 */
     int jstat;
     struct jtoken * jtok;
     int jstrix;
+    int brdepth;
 
     jstat = 0;
+    brdepth = 0;
     jstrix = 0;
+    (*tcharslen) = 0;
     (*pjtl) = jtok_new_jtokenlist();
 
-    if (tflags & 1) {
+    if (tflags & JTOK_CRE_FLAG_ADD_OPEN) {
         jtok_add_string_to_jtokenlist(jx, *pjtl, "{");
     }
 
@@ -1175,19 +1239,43 @@ int jtok_create_tokenlist(  struct jrunexec * jx,
         if (!jstat) {
 #if IS_DEBUG
             if (jtok->jtok_kw == JSPU_AT_AT) {
+                (*tcharslen) = jstrix - 2;
                 jstat = JERR_EOF;
             } else
 #endif
-            jtok_add_to_jtokenlist(*pjtl, jtok);
+            if (tflags & JTOK_CRE_FLAG_STOP_AT_BRACE) {
+                if (jtok->jtok_kw == JSPU_CLOSE_BRACE) {
+                    if (brdepth) {
+                        brdepth--;
+                        jtok_add_to_jtokenlist(*pjtl, jtok);
+                    } else {
+                        (*tcharslen) = jstrix - 1;
+                        jstat = JERR_CLOSE_BRACE;
+                    }
+                } else {
+                    if (jtok->jtok_kw == JSPU_OPEN_BRACE) brdepth++;
+                    jtok_add_to_jtokenlist(*pjtl, jtok);
+                }
+            } else {
+                jtok_add_to_jtokenlist(*pjtl, jtok);
+            }
         }
     }
 
-    if (jstat == JERR_EOF) {
+    if (tflags & JTOK_CRE_FLAG_STOP_AT_BRACE) {
+        if (jstat == JERR_CLOSE_BRACE) {
+            jstat = 0;
+        } else if (jstat < 0) {
+            jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_NO_CLOSE_BRACE,
+                "Missing } for string interpolation");
+        }
+    } else if (jstat == JERR_EOF) {
+        (*tcharslen) = jstrix - 1;  /* ?? */
         jstat = 0;
     }
     jtok_free_jtoken(jtok);
 
-    if (!jstat && (tflags & 2)) {
+    if (!jstat && (tflags & JTOK_CRE_FLAG_ADD_CLOSE)) {
         jtok_add_string_to_jtokenlist(jx, *pjtl, "}");
     }
 
@@ -1334,5 +1422,24 @@ struct jtokeninfo * jprep_ensure_jtokeninfo(
 #endif
 
     return (jti);
+}
+/***************************************************************/
+struct jtoken * jtok_eof_token(void)
+{
+/*
+** 08/08/2022
+**
+*/
+    static struct jtoken jtok;
+
+    jtok.jtok_tlen  = 0;
+    jtok.jtok_tmax  = 0;
+    jtok.jtok_text  = NULL;
+    jtok.jtok_jti   = NULL;
+    jtok.jtok_flags = 0;
+    jtok.jtok_typ   = JSW_EOF;
+    jtok.jtok_kw    = JSPU__EOF;
+
+    return (&jtok);
 }
 /***************************************************************/

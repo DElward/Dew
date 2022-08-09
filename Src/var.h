@@ -155,7 +155,7 @@ int jvar_get_block_jcontext(
                     struct jcontext ** pjcx);
 struct jvarvalue_dynamic * new_jvarvalue_dynamic(void);
 void free_jvarvalue_dynamic(struct jvarvalue_dynamic * jvvy);
-struct jvarvalue_chars * jvar_new_jvarvalue_chars(void);            /* 03/15/2022 */
+struct jvarvalue_chars * jvar_new_jvarvalue_chars(void); /* 03/15/2022 */
 void jvar_free_jvarvalue_chars(struct jvarvalue_chars * jvv_chars); /* 03/15/2022 */
 struct jvarvalue * jvar_next_iterate_jvv(struct jvv_iterator * jvvit);  /* 03/22/2022 */
 struct jvarvalue * jvar_begin_iterate_jvv(

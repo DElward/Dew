@@ -791,6 +791,18 @@ let s101_31h = `xy\\${v101_31a}z`;
 if (s101_31h == "xy\\abcdefghiKlmnopqrsTz") ngood = ngood + 1; else { console.log("Test 101_31h failed"); nerrs = nerrs + 1; }
 let s101_31i = `xy\u005c${v101_31a}z`;
 if (s101_31i == "xy\\abcdefghiKlmnopqrsTz") ngood = ngood + 1; else { console.log("Test 101_31i failed"); nerrs = nerrs + 1; }
+var s101_31j = `xy${`12${v101_31a}34`}z`;
+if (s101_31j == "xy12abcdefghiKlmnopqrsT34z") ngood = ngood + 1; else { console.log("Test 101_31j failed"); nerrs = nerrs + 1; }
+var s101_31k = `xy${"12${v101_31a}34"}z`;
+if (s101_31k == "xy12${v101_31a}34z") ngood = ngood + 1; else { console.log("Test 101_31k failed"); nerrs = nerrs + 1; }
+var v101_31e = `xy${v101_31a}z`;
+function f101_31a(arg1) { return arg1 + "DEF"; }
+let s101_31l = `xy${f101_31a("ABC")}z`;
+if (s101_31l == "xyABCDEFz") ngood = ngood + 1; else { console.log("Test 101_31l failed"); nerrs = nerrs + 1; }
+let s101_31m = `xy${f101_31a(v101_31e)}z`;
+if (s101_31m == "xyxyabcdefghiKlmnopqrsTzDEFz") ngood = ngood + 1; else { console.log("Test 101_31m failed"); nerrs = nerrs + 1; }
+let s101_31n = `xy${f101_31a(`xy${v101_31a}z`)}z`;
+if (s101_31n == "xyxyabcdefghiKlmnopqrsTzDEFz") ngood = ngood + 1; else { console.log("Test 101_31n failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

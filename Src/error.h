@@ -5,11 +5,10 @@
 /***************************************************************/
 
 #define JERR_EOF                                (-1)
-#define JERR_EOF_ERROR                          (-2)
-#define JERR_STOPPED                            (-3)
-#define JERR_EXIT                               (-4)
-#define JERR_RETURN                             (-5)
-#define JERR_CLOSE_BRACE                        (-6)
+#define JERR_STOPPED                            (-2)
+#define JERR_EXIT                               (-3)
+#define JERR_RETURN                             (-4)
+#define JERR_CLOSE_BRACE                        (-5)
 
 #define JSERR_UNMATCHED_QUOTE                   (-9801)
 #define JSERR_INVALID_ESCAPE                    (-9802)

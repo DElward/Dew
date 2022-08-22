@@ -7,6 +7,7 @@
 #define USE_JVV_CHARS_POINTER       1       /* 1 passes tests */
 #define USE_JVARVALUE_IMETHVAR      1       /* 1 passes tests */
 #define PREP_INACTIVE_EXPRESSIONS   1       /* 1 passes tests */
+#define FIX_220812                  0
 
 typedef int32 JSINT;
 typedef int32 JSBOOL;

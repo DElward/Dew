@@ -650,6 +650,57 @@ static void jtok_append_token_null(struct jtoken * jtok)
     jtok->jtok_text[jtok->jtok_tlen] = '\0';
 }
 /***************************************************************/
+void jtok_print_jtoken(struct jtoken * jtok)
+{
+/*
+**
+*/
+    char ttyp[16];
+    char * kwnam;
+
+    switch (jtok->jtok_typ) {
+        case JSW_UNKNOWN: strcpy(ttyp, "Unk");          break;
+        case JSW_KW     : strcpy(ttyp, "KW");           break;
+        case JSW_PU     : strcpy(ttyp, "Pun");          break;
+        case JSW_NUMBER : strcpy(ttyp, "Num");          break;
+        case JSW_ID     : strcpy(ttyp, "Id");           break;
+        case JSW_STRING : strcpy(ttyp, "Str");          break;
+        default         : sprintf(ttyp, "?%d?", jtok->jtok_typ);
+            break;
+    }
+
+    kwnam = NULL;
+    if (jtok->jtok_typ == JSW_KW) {
+        kwnam = jrun_find_keyword_name(jtok->jtok_kw);
+        if (kwnam) {
+            if (!strcmp(jtok->jtok_text, kwnam)) {
+                printf("{%s,%s,ok} ", jtok->jtok_text, ttyp);
+            } else {
+                printf("{%s,%s,ERR`%s`} ", jtok->jtok_text, ttyp, kwnam);
+            }
+        } else {
+            printf("{%s,%s,ERROR} ", jtok->jtok_text, ttyp);
+        }
+    } else if (jtok->jtok_typ == JSW_PU) {
+        kwnam = jrun_find_punctuator_name(jtok->jtok_kw);
+        if (kwnam) {
+            if (!strcmp(jtok->jtok_text, kwnam)) {
+                printf("{%s,%s,ok} ", jtok->jtok_text, ttyp);
+            } else {
+                printf("{%s,%s,ERR`%s`} ", jtok->jtok_text, ttyp, kwnam);
+            }
+        } else {
+            if (jtok->jtok_kw == JSPU_NONE) {
+                printf("{%s,%s} ", jtok->jtok_text, ttyp);
+            } else {
+                printf("{%s,%s,ERROR} ", jtok->jtok_text, ttyp);
+            }
+        }
+    } else {
+        printf("{%s,%s} ", jtok->jtok_text, ttyp);
+    }
+}
+/***************************************************************/
 static int jtok_get_token_quote(struct jrunexec * jx,
         HTMLC qchar,
         struct jtoken * jtok,
@@ -702,7 +753,6 @@ static int jtok_get_token_quote(struct jrunexec * jx,
 }
 /***************************************************************/
 static int jtok_get_token_template(struct jrunexec * jx,
-        HTMLC qchar,
         struct jtoken * jtok,
         const char * jstr,
         int * jstrix)
@@ -713,10 +763,16 @@ static int jtok_get_token_template(struct jrunexec * jx,
     int jstat = 0;
     int done;
     int is_err;
+    int qdepth;
+    HTMLC nqchar;
     HTMLC jchar;
+    HTMLC prevjchar;
 
-    done = 0;
-    jtok_append_token(jtok, qchar);
+    done        = 0;
+    prevjchar   = 0;
+    qdepth      = 0;
+    nqchar      = 0;
+    jtok_append_token(jtok, JTOK_CHAR_TEMPLATE);
 
     while (!done) {
         if (JTOK_CURRENT_CHAR(jstr,jstrix) == '\\') {
@@ -739,6 +795,7 @@ static int jtok_get_token_template(struct jrunexec * jx,
                     jtok->jtok_typ = JSW_ERROR;
                 }
             }
+            prevjchar = 0;
         } else {
             jchar = jtok_get_char(jx, jstr, jstrix);
             if (!jchar) {
@@ -746,13 +803,30 @@ static int jtok_get_token_template(struct jrunexec * jx,
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNMATCHED_QUOTE,
                         "Unmatched quotation");
                 jtok->jtok_typ = JSW_ERROR;
-            } else {
-                if (jchar == qchar) done = 1;
+            } else if (nqchar != 0) {
+                if (jchar == nqchar) {
+                    nqchar = 0;
+                }
                 jtok_append_token(jtok, jchar);
+            } else {
+                if (jchar == '{' && prevjchar == '$') {
+                    qdepth++;
+                } else if (jchar == '}' && qdepth > 0) {
+                    qdepth--;
+                } else if (JTOK_QUOTE_CHAR(jchar)) {
+                    nqchar = jchar;
+                } else if (jchar == JTOK_CHAR_TEMPLATE && qdepth == 0) {
+                    done = 1;
+                }
+                jtok_append_token(jtok, jchar);
+                prevjchar = jchar;
             }
         }
     }
     jtok_append_token_null(jtok);
+    jtok->jtok_typ = JSW_STRING;
+
+    /* jtok_print_jtoken(jtok); */
 
     return (jstat);
 }
@@ -1012,8 +1086,7 @@ int jtok_get_token(struct jrunexec * jx,
         jstat = jtok_get_token_quote(jx, jchar, jtok, jstr, jstrix);
         jtok->jtok_typ = JSW_STRING;
     } else if (jchar == JTOK_CHAR_TEMPLATE) {
-        jstat = jtok_get_token_template(jx, jchar, jtok, jstr, jstrix);
-        jtok->jtok_typ = JSW_STRING;
+        jstat = jtok_get_token_template(jx, jtok, jstr, jstrix);
     } else if (jchar == '\\') {
         jstat = jtok_get_backslashed_token(jx, jtok, jstr, jstrix);
     } else if (jchar == '.' && isdigit(JTOK_CURRENT_CHAR(jstr, jstrix))) {
@@ -1137,57 +1210,6 @@ void jtok_add_string_to_jtokenlist(struct jrunexec * jx,
         if (!jstat && (jtok->jtok_typ == JSW_PU)) {
             jtok_add_to_jtokenlist(jtl, jtok);
         }
-    }
-}
-/***************************************************************/
-void jtok_print_jtoken(struct jtoken * jtok)
-{
-/*
-**
-*/
-    char ttyp[16];
-    char * kwnam;
-
-    switch (jtok->jtok_typ) {
-        case JSW_UNKNOWN: strcpy(ttyp, "Unk");          break;
-        case JSW_KW     : strcpy(ttyp, "KW");           break;
-        case JSW_PU     : strcpy(ttyp, "Pun");          break;
-        case JSW_NUMBER : strcpy(ttyp, "Num");          break;
-        case JSW_ID     : strcpy(ttyp, "Id");           break;
-        case JSW_STRING : strcpy(ttyp, "Str");          break;
-        default         : sprintf(ttyp, "?%d?", jtok->jtok_typ);
-            break;
-    }
-
-    kwnam = NULL;
-    if (jtok->jtok_typ == JSW_KW) {
-        kwnam = jrun_find_keyword_name(jtok->jtok_kw);
-        if (kwnam) {
-            if (!strcmp(jtok->jtok_text, kwnam)) {
-                printf("{%s,%s,ok} ", jtok->jtok_text, ttyp);
-            } else {
-                printf("{%s,%s,ERR`%s`} ", jtok->jtok_text, ttyp, kwnam);
-            }
-        } else {
-            printf("{%s,%s,ERROR} ", jtok->jtok_text, ttyp);
-        }
-    } else if (jtok->jtok_typ == JSW_PU) {
-        kwnam = jrun_find_punctuator_name(jtok->jtok_kw);
-        if (kwnam) {
-            if (!strcmp(jtok->jtok_text, kwnam)) {
-                printf("{%s,%s,ok} ", jtok->jtok_text, ttyp);
-            } else {
-                printf("{%s,%s,ERR`%s`} ", jtok->jtok_text, ttyp, kwnam);
-            }
-        } else {
-            if (jtok->jtok_kw == JSPU_NONE) {
-                printf("{%s,%s} ", jtok->jtok_text, ttyp);
-            } else {
-                printf("{%s,%s,ERROR} ", jtok->jtok_text, ttyp);
-            }
-        }
-    } else {
-        printf("{%s,%s} ", jtok->jtok_text, ttyp);
     }
 }
 /***************************************************************/

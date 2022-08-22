@@ -215,6 +215,7 @@ static void jvar_cat_chars(
     if (jvvtgt->jvv_dtype != JVV_DTYPE_CHARS) {
         jvar_free_jvarvalue_data(jvvtgt);
         jvvtgt->jvv_dtype = JVV_DTYPE_CHARS;
+        jvvtgt->jvv_val.jvv_val_chars = jvar_new_jvarvalue_chars(); /* 08/19/2022 */
         jvvtgt->jvv_val.jvv_val_chars->jvvc_size = tlen + JVARVALUE_CHARS_MIN;
         jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars =
             New(char, jvvtgt->jvv_val.jvv_val_chars->jvvc_size);
@@ -738,7 +739,7 @@ struct jvarvalue {
                     &(jvvchars.jvv_val.jvv_val_chars));
 #endif
                 jvar_free_jvarvalue_data(&jvvchars);
-                jvar_free_jvarvalue_data(ajvv2);
+                //jvar_free_jvarvalue_data(ajvv2);
             }
             break;
 
@@ -1547,7 +1548,7 @@ static int jvar_assign_to_reference(struct jrunexec * jx,
             vjvvtgt->jvv_val.jvv_val_imethvar.jvvimv_this_ptr = NULL;
         }
         jstat = jvar_assign_jvarvalue(jx, vjvvtgt, jvvsrc);
-        if (!jstat) jvar_free_jvarvalue_data(jvvsrc);
+        //if (!jstat) jvar_free_jvarvalue_data(jvvsrc);
     } else if (jvvtgt->jvv_dtype == JVV_DTYPE_DYNAMIC) {
         if (!jvvtgt->jvv_val.jvv_val_dynamic->jvvy_set_proc) {
             jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_PROP_READ_ONLY,
@@ -1559,7 +1560,7 @@ static int jvar_assign_to_reference(struct jrunexec * jx,
     } else {
         jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERROBJ_SCRIPT_SYNTAX_ERROR,
             "Invalid left-hand side in assignment");
-    }
+    } 
 
     return (jstat);
 }
@@ -2121,8 +2122,12 @@ int jrun_exec_return_stmt(
         vjvv = jrun_get_return_jvv(jx);
         jstat = jexp_evaluate(jx, pjtok, &rtnjvv);
         if (!jstat) {
-            //jstat = jvar_store_jvarvalue(jx, vjvv, &rtnjvv);
+#if 0
+            jstat = jvar_store_jvarvalue(jx, vjvv, &rtnjvv);
+            jvar_free_jvarvalue_data(&rtnjvv);
+#else
             COPY_JVARVALUE(vjvv, &rtnjvv);
+#endif
         }
     }
 
@@ -3635,7 +3640,9 @@ int jexp_eval_value(
                             }
                         } else if ((*pjtok)->jtok_kw == JSPU_OPEN_PAREN) {
                             jstat = jexp_eval_function_call(jx, pjtok, xstack, &depth);
-                            xlx = GET_XLX(*pjtok);
+                            if (!jstat) {    /* 08/22/2022 */
+                                xlx = GET_XLX(*pjtok);
+                            }
                         } else {
                             state = JEXPST_DONE;
                         }
@@ -3757,8 +3764,12 @@ int jexp_eval_value(
     }
 
     if (jstat) {
-        jexp_skip_error_exp(jx, pjtok, xstack, &depth);
-        INIT_JVARVALUE(jvv);
+        if (jstat > 0 || depth != 1) {    /* 08/22/2022 */
+            jexp_skip_error_exp(jx, pjtok, xstack, &depth);
+            INIT_JVARVALUE(jvv);
+        } else {                                            /* 08/22/2022 */
+            COPY_JVARVALUE(jvv, &(xstack[0].xs_jvv));       /* 08/22/2022 */
+        }                                                   /* 08/22/2022 */
     } else {
         if (depth) {
             COPY_JVARVALUE(jvv, &(xstack[0].xs_jvv));

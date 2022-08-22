@@ -885,6 +885,9 @@ int jvar_eval_string(
         jstat = jrun_next_token(jx, &jtok);
         if (!jstat) {
             jstat = jexp_evaluate(jx, &jtok, jvv);
+            if (jstat == JERR_EOF) {
+                jstat = 0;
+            }
         }
 
         jrun_set_current_jxc(jx, &jxc);
@@ -988,6 +991,7 @@ int jvar_interpolate(
                 prbuf, prlen);
             (*p_tcharix) = newix;
         }
+        jvar_free_jvarvalue_data(&jvv);
         Free(prbuf);
     }
 

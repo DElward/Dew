@@ -199,6 +199,7 @@ char * jvar_get_dtype_name(int dtype)
         case JVV_DTYPE_OBJECT          : out = "Object";            break;
         case JVV_DTYPE_OBJPTR          : out = "ObjPtr";            break;
         case JVV_DTYPE_DYNAMIC         : out = "Dynamic";           break;
+        case JVV_DTYPE_POINTER         : out = "Pointer";           break;
         default                        : out = "*Undefined*";       break;
     }
 
@@ -230,6 +231,7 @@ void jvar_free_jvarvalue_internal_method(struct jvarvalue_int_method * jvvim)
     DECIMETHREFS(jvvim);
     if (jvvim->jvvim_nRefs == 0) {
         Free(jvvim->jvvim_method_name);
+        /* jvar_free_jvarvalue_data(&(jvvim->jvvim_class)); */
         Free(jvvim);
     }
 }
@@ -325,9 +327,15 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
 
         case JVV_DTYPE_LVAL :
             jvv->jvv_dtype = JVV_DTYPE_NONE;
+#if FIX_220830
+            if (jvv->jvv_val.jvv_lval.jvvv_parent) {
+                jvar_free_jvarvalue(jvv->jvv_val.jvv_lval.jvvv_parent);
+            }
+#else
             if (jvv->jvv_val.jvv_lval.jvvv_jvvb) {
                 job_free_jvarvalue_object(jvv->jvv_val.jvv_lval.jvvv_jvvb);
             }
+#endif
             break;
 
         case JVV_DTYPE_CHARS :
@@ -399,6 +407,12 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
             job_free_jvarvalue_object(jvv->jvv_val.jvv_val_object);
             jvv->jvv_val.jvv_val_object = NULL;
             jvv->jvv_dtype = JVV_DTYPE_NONE;
+            break;
+
+        case JVV_DTYPE_POINTER   :
+            jvar_free_jvarvalue_pointer(jvv->jvv_val.jvv_pointer);
+            jvv->jvv_dtype = JVV_DTYPE_NONE;
+            jvv->jvv_val.jvv_pointer = NULL;
             break;
 
         default:
@@ -580,7 +594,11 @@ int jvar_store_jvarvalue(
             break;
 
         case JVV_DTYPE_INTERNAL_CLASS   :
+            jvar_free_jvarvalue_data(jvvtgt);
+
+            jvvtgt->jvv_dtype = JVV_DTYPE_INTERNAL_CLASS;
             jvvtgt->jvv_val.jvv_jvvi = jvvsrc->jvv_val.jvv_jvvi;
+            INCICLASSHREFS(jvvsrc->jvv_val.jvv_jvvi);
             break;
 
         case JVV_DTYPE_FUNCVAR   :
@@ -655,6 +673,14 @@ int jvar_store_jvarvalue(
                         "Cannot store to object pointer type %s", jvar_get_dtype_name(jvvsrc->jvv_dtype));
                     break;
             }
+            break;
+
+        case JVV_DTYPE_POINTER   :
+            jvar_free_jvarvalue_data(jvvtgt);
+
+            jvvtgt->jvv_dtype = JVV_DTYPE_POINTER;
+            jvvtgt->jvv_val.jvv_pointer = jvvsrc->jvv_val.jvv_pointer;
+            INCPOINTERREFS(jvvsrc->jvv_val.jvv_pointer);
             break;
 
         default:
@@ -835,6 +861,32 @@ struct jvarvalue * jvar_int_object_member(struct jrunexec * jx,
                 } else {
                     jvvo = NULL;
                 }
+            }
+        }
+    }
+
+    return (jvv);
+}
+/***************************************************************/
+struct jvarvalue * jvar_int_class_member(struct jrunexec * jx,
+    struct jvarvalue * cjvv,
+    const char * mbrname)
+{
+/*
+** 08/25/2022
+*/
+    struct jvarvalue *  jvv;
+    int * pvix;
+    struct jvarvalue_internal_class * jvvi;
+
+    jvv = NULL;
+
+    if (cjvv) {
+        if (cjvv->jvv_dtype == JVV_DTYPE_INTERNAL_CLASS) {
+            jvvi = cjvv->jvv_val.jvv_jvvi;
+            pvix = jvar_find_in_jvarrec(jvvi->jvvi_jvar, mbrname);
+            if (pvix && (*pvix) >= 0 && (*pvix) < jvvi->jvvi_jvar->jvar_nconsts) {
+                jvv = &(jvvi->jvvi_jvar->jvar_aconsts[*pvix]);
             }
         }
     }
@@ -1475,11 +1527,122 @@ struct jvarvalue_int_method * jvar_new_int_method(
 
     jvvim->jvvim_method = ifuncptr;
     jvvim->jvvim_method_name = Strdup(method_name);
-    jvvim->jvvim_cjvv = cjvv;
+    if (cjvv) {
+        COPY_JVARVALUE(&(jvvim->jvvim_class), cjvv);
+        /* if (cjvv->jvv_dtype == JVV_DTYPE_INTERNAL_CLASS) { */
+        /*     INCICLASSHREFS(cjvv->jvv_val.jvv_jvvi);        */
+        /* }                                                  */
+    } else {
+        jvvim->jvvim_class.jvv_dtype = JVV_DTYPE_NONE;
+    }
+    jvvim->jvvim_nRefs = 0;
 
     return (jvvim);
 }
 /***************************************************************/
+int jrun_ensure_number(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    JSFLOAT *fltval,
+    int ensflags)
+{
+/*
+** 08/25/2022
+*/
+    int jstat = 0;
+    int cstat;
+    int intnum;
+    double dblnum;
+    struct jvarvalue * rjvv;
+
+    (*fltval) = 0.0;
+
+    switch (jvv->jvv_dtype) {
+        
+        case JVV_DTYPE_BOOL   :
+            (*fltval) = jvv->jvv_val.jvv_val_bool?1.0:0.0;
+            break;
+
+        case JVV_DTYPE_JSINT   :
+            (*fltval) = (JSFLOAT)(jvv->jvv_val.jvv_val_jsint);
+            break;
+
+        case JVV_DTYPE_JSFLOAT   :
+            (*fltval) = jvv->jvv_val.jvv_val_jsfloat;
+            break;
+
+        case JVV_DTYPE_CHARS   :
+#if USE_JVV_CHARS_POINTER
+            cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars->jvvc_val_chars, &intnum, &dblnum);
+#else
+            cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars.jvvc_val_chars, &intnum, &dblnum);
+#endif
+            if (cstat == 1) (*fltval) = (JSFLOAT)intnum;
+            else if (cstat == 2) (*fltval) = dblnum;
+            else if (ensflags & ENSURE_FLAG_ERROR) {
+#if USE_JVV_CHARS_POINTER
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_NUM,
+                    "Expecting number. Found string: %s",        
+                    jvv->jvv_val.jvv_val_chars->jvvc_val_chars);
+#else
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_NUM,
+                    "Expecting integer. Found string: %s",        
+                    jvv->jvv_val.jvv_val_chars.jvvc_val_chars);
+#endif
+            }
+            break;
+
+        case JVV_DTYPE_LVAL:
+            jstat = jrun_ensure_number(jx, jvv->jvv_val.jvv_lval.jvvv_lval, fltval, ensflags);
+            break;
+
+        case JVV_DTYPE_DYNAMIC:
+            jstat = (jvv->jvv_val.jvv_val_dynamic->jvvy_get_proc)(jx,
+                jvv->jvv_val.jvv_val_dynamic,
+                NULL,
+                &rjvv);
+            if (!jstat) {
+                jstat = jrun_ensure_number(jx, rjvv, fltval, ensflags);
+            }
+            break;
+
+        case JVV_DTYPE_NONE   :
+        case JVV_DTYPE_INTERNAL_CLASS:
+        case JVV_DTYPE_INTERNAL_METHOD:
+        case JVV_DTYPE_INTERNAL_OBJECT:
+        case JVV_DTYPE_VALLIST:
+        case JVV_DTYPE_TOKEN:
+        case JVV_DTYPE_FUNCTION:
+        case JVV_DTYPE_FUNCVAR   :
+        case JVV_DTYPE_ARRAY:
+        default:
+            if (ensflags & ENSURE_FLAG_ERROR) {
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_NUM,
+                    "Expecting number. Found type: %s",        
+                    jvar_get_dtype_name(jvv->jvv_dtype));
+            }
+            break;
+    }
+
+    if (!jstat) {
+        if (ensflags & ENSURE_FLAG_REQUIRE_INTEGER) {
+            JSFLOAT jsflt = floor(*fltval);
+            JSINT   jsint = (JSINT)jsflt;
+            if (jsflt == (*fltval) && (JSFLOAT)jsint == jsflt) {    /* this range checks */
+                (*fltval) = jsflt;
+            } else if (ensflags & ENSURE_FLAG_ERROR) {
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_NUM,
+                    "Expecting integer number. Found: %g", (*fltval));
+            } else {
+                (*fltval) = 0.0;
+            }
+        }
+    }
+
+    return (jstat);
+}
+/***************************************************************/
+#ifdef OLD_WAY
 int jrun_ensure_int(
     struct jrunexec * jx,
     struct jvarvalue * jvv,
@@ -1488,8 +1651,6 @@ int jrun_ensure_int(
 {
 /*
 ** 10/07/2021
-**
-** See also: jexp_eval_rval()
 */
     int jstat = 0;
     int cstat;
@@ -1521,7 +1682,7 @@ int jrun_ensure_int(
 #endif
             if (cstat == 1) (*intval) = intnum;
             else if (cstat == 2) (*intval) = (int)floor(dblnum);
-            else if (ensflags & ENSINT_FLAG_INTERR) {
+            else if (ensflags & ENSURE_FLAG_ERROR) {
 #if USE_JVV_CHARS_POINTER
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_INT,
                     "Expecting integer. Found string: %s",        
@@ -1558,7 +1719,7 @@ int jrun_ensure_int(
         case JVV_DTYPE_FUNCVAR   :
         case JVV_DTYPE_ARRAY:
         default:
-            if (ensflags & ENSINT_FLAG_INTERR) {
+            if (ensflags & ENSURE_FLAG_ERROR) {
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_INT,
                     "Expecting integer. Found type: %s",        
                     jvar_get_dtype_name(jvv->jvv_dtype));
@@ -1568,6 +1729,28 @@ int jrun_ensure_int(
 
     return (jstat);
 }
+/***************************************************************/
+#else
+int jrun_ensure_int(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    JSINT *intval,
+    int ensflags)
+{
+/*
+** 05/25/2022
+*/
+    int jstat = 0;
+    JSFLOAT fltval;
+
+    jstat = jrun_ensure_number(jx, jvv, &fltval, ensflags | ENSURE_FLAG_REQUIRE_INTEGER);
+    if (!jstat) {
+        (*intval) = (JSINT)floor(fltval);
+    }
+
+    return (jstat);
+}
+#endif
 /***************************************************************/
 int jrun_ensure_chars(
     struct jrunexec * jx,
@@ -1767,5 +1950,149 @@ void jvar_close_iterate_jvv_data(struct jvv_iterator * jvvit)
 /*
 ** 03/22/2022
 */
+}
+/***************************************************************/
+struct jvarvalue_pointer * jvar_new_jvarvalue_pointer(void)
+{
+/*
+** 08/26/2022
+*/
+    struct jvarvalue_pointer * jvvr;
+
+    jvvr = New(struct jvarvalue_pointer, 1);
+    jvvr->jvvr_jvv.jvv_dtype = JVV_DTYPE_NONE;
+    jvvr->jvvr_jvv.jvv_val.jvv_void = NULL;
+    jvvr->jvvr_nRefs = 1;
+
+    return (jvvr);
+}
+/***************************************************************/
+void jvar_free_jvarvalue_pointer(struct jvarvalue_pointer * jvvr)
+{
+/*
+** 08/26/2022
+*/
+    DECPOINTERREFS(jvvr);
+    if (!jvvr->jvvr_nRefs) {
+        jvar_free_jvarvalue_data(&(jvvr->jvvr_jvv));
+        Free(jvvr);
+    }
+}
+/***************************************************************/
+int jvar_calc_typeof(struct jrunexec * jx,
+        struct jvarvalue * jvv,
+        char ** typeofstr,
+        int   * typeoflen)
+{
+/*
+** 08/29/2022
+**
+** typeof
+*/
+    int jstat = 0;
+    int typeofmax;
+    struct jvarvalue * tgtjvv;
+
+    (*typeofstr) = NULL;
+    (*typeoflen) = 0;
+    typeofmax    = 0;
+
+    switch (jvv->jvv_dtype) {
+        case JVV_DTYPE_NONE  :
+            append_charval(typeofstr, typeoflen, &typeofmax, "undefined");
+            break;
+
+        case JVV_DTYPE_BOOL  :
+            append_charval(typeofstr, typeoflen, &typeofmax, "boolean");
+            break;
+
+        case JVV_DTYPE_JSINT   :
+            append_charval(typeofstr, typeoflen, &typeofmax, "number");
+            break;
+
+        case JVV_DTYPE_JSFLOAT:
+            append_charval(typeofstr, typeoflen, &typeofmax, "number");
+            break;
+
+        case JVV_DTYPE_LVAL :
+            jstat = jvar_calc_typeof(jx, jvv->jvv_val.jvv_lval.jvvv_lval, typeofstr, typeoflen);
+            break;
+
+        case JVV_DTYPE_CHARS :
+            append_charval(typeofstr, typeoflen, &typeofmax, "string");
+            break;
+
+        case JVV_DTYPE_INTERNAL_CLASS :
+            append_charval(typeofstr, typeoflen, &typeofmax, "function");
+            break;
+
+        case JVV_DTYPE_INTERNAL_OBJECT :
+            append_charval(typeofstr, typeoflen, &typeofmax, "object");
+            break;
+
+        case JVV_DTYPE_INTERNAL_METHOD:
+            append_charval(typeofstr, typeoflen, &typeofmax, "function");
+            break;
+
+        case JVV_DTYPE_TOKEN :
+            append_charval(typeofstr, typeoflen, &typeofmax, "JVV_DTYPE_TOKEN");
+            break;
+
+        case JVV_DTYPE_VALLIST:
+            append_charval(typeofstr, typeoflen, &typeofmax, "JVV_DTYPE_VALLIST");
+            break;
+
+        case JVV_DTYPE_FUNCTION:
+            append_charval(typeofstr, typeoflen, &typeofmax, "JVV_DTYPE_FUNCTION");
+            break;
+
+        case JVV_DTYPE_FUNCVAR:
+            append_charval(typeofstr, typeoflen, &typeofmax, "function");
+            break;
+        
+        case JVV_DTYPE_IMETHVAR:
+            append_charval(typeofstr, typeoflen, &typeofmax, "function");
+            break;
+
+        case JVV_DTYPE_ARRAY :
+            append_charval(typeofstr, typeoflen, &typeofmax, "JVV_DTYPE_ARRAY");
+            break;
+        
+        case JVV_DTYPE_OBJPTR:
+            switch (jvv->jvv_val.jvv_objptr.jvvp_pval->jvv_dtype) {
+                case JVV_DTYPE_ARRAY   :
+                    append_charval(typeofstr, typeoflen, &typeofmax, "object");
+                    break;
+                case JVV_DTYPE_OBJECT   :
+                    append_charval(typeofstr, typeoflen, &typeofmax, "object");
+                    break;
+                default:
+                    append_charval(typeofstr, typeoflen, &typeofmax, "*unsupported object pointer type*");
+                    break;
+            }
+            break;
+
+        case JVV_DTYPE_DYNAMIC :
+            jstat = (jvv->jvv_val.jvv_val_dynamic->jvvy_get_proc)(jx,
+                     jvv->jvv_val.jvv_val_dynamic, NULL, &tgtjvv);
+            if (!jstat) {
+                jstat = jvar_calc_typeof(jx, tgtjvv, typeofstr, typeoflen);
+            }
+            break;
+
+        case JVV_DTYPE_OBJECT :
+            append_charval(typeofstr, typeoflen, &typeofmax, "JVV_DTYPE_OBJECT");
+            break;
+
+        case JVV_DTYPE_POINTER   :
+            append_charval(typeofstr, typeoflen, &typeofmax, "object");
+            break;
+
+        default:
+            append_charval(typeofstr, typeoflen, &typeofmax, "*unsupported type*");
+            break;
+    }
+
+    return (jstat);
 }
 /***************************************************************/

@@ -4,10 +4,11 @@
 /*  internal.h --  Internal classes                            */
 /***************************************************************/
 
-#define JVV_INTERNAL_CLASS_Console          "Console"
+#define JVV_INTERNAL_CLASS_Console          "@Console"
 #define JVV_INTERNAL_VAR_console            "console"
 
 #define JVV_INTERNAL_METHOD_toString        "toString"
+#define JVV_INTERNAL_METHOD__new            ".new"
 
 /* Error classes */
 #define JVV_INTERNAL_CLASS_Error            "Error"
@@ -22,12 +23,13 @@
 #define JVV_INTERNAL_CLASS_UnimplementedError "UnimplementedError"
 
 /* Type classes */
-#define JVV_INTERNAL_TYPE_CLASS_JSInt       "Integer"
+#define JVV_INTERNAL_TYPE_CLASS_JSInt       "@Integer"
+#define JVV_INTERNAL_TYPE_CLASS_Number      "Number"
 #define JVV_INTERNAL_TYPE_CLASS_String      "String"
 #define JVV_INTERNAL_TYPE_CLASS_Array       "Array"
 #define JVV_INTERNAL_TYPE_CLASS_Dynamic     "@Dynamic"
 
-#define JVV_BRACKET_OPERATION           "[]"
+#define JVV_BRACKET_OPERATION               "[]"
 
 struct jintobj_console { /* jioc_ */
 #if IS_DEBUG

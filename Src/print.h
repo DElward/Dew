@@ -25,6 +25,7 @@
 /* filters - bits - for jpr_vartype_matches() */
 #define JFMT_FILTER_VARS               0x1000000
 #define JFMT_FILTER_CLASSES            0x2000000
+#define JFMT_FILTER_METHODS            0x4000000
 
 /* flags - bits */
 #define JFMT_FLAG_SHOW_TYPE             0x001000

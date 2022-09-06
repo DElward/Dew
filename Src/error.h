@@ -64,6 +64,10 @@
 #define JSERR_OBJECT_MEMBER_NOT_FOUND           (-9852)
 #define JSERR_OBJECT_POINTER                    (-9853)
 #define JSERR_NO_CLOSE_BRACE                    (-9854)
+#define JSERR_UNIMPLEMENTED                     (-9855)
+#define JSERR_UNDEFINED_CLASS                   (-9856)
+#define JSERR_INVALID_CLASS                     (-9857)
+#define JSERR_CONVERT_TO_NUM                    (-9858)
 
 #define JSERR_RUNTIME_STACK_OVERFLOW            (-7801)
 #define JSERR_RUNTIME_STACK_UNDERFLOW           (-7802)

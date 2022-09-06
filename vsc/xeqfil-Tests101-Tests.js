@@ -803,6 +803,68 @@ let s101_31m = `xy${f101_31a(v101_31e)}z`;
 if (s101_31m == "xyxyabcdefghiKlmnopqrsTzDEFz") ngood = ngood + 1; else { console.log("Test 101_31m failed"); nerrs = nerrs + 1; }
 let s101_31n = `xy${f101_31a(`xy${v101_31a}z`)}z`;
 if (s101_31n == "xyxyabcdefghiKlmnopqrsTzDEFz") ngood = ngood + 1; else { console.log("Test 101_31n failed"); nerrs = nerrs + 1; }
+let v101_31o1 = 11;
+let v101_31o2 = 5;
+let s101_31o = `x${v101_31o1 / v101_31o2}y`;
+if (s101_31o == "x2.2y") ngood = ngood + 1; else { console.log("Test 101_31o failed"); nerrs = nerrs + 1; }
+////////////////////////////////////////////////////////////////////////
+// Test 101_32 - 08/29/2022 - Expression tests
+////////////////////////////////////////////////////////////////////////
+var v101_32;
+v101_32 = "abc", 3, 4;
+if (v101_32 == "abc") ngood = ngood + 1; else { console.log("Test 101_32a failed"); nerrs = nerrs + 1; }
+v101_32 = ("abc", 3, 4);
+if (v101_32 == 4) ngood = ngood + 1; else { console.log("Test 101_32b failed"); nerrs = nerrs + 1; }
+v101_32 = 11 / 5;
+if (v101_32 == 2.2) ngood = ngood + 1; else { console.log("Test 101_32c failed"); nerrs = nerrs + 1; }
+v101_32 = new Number(7);
+if (v101_32 == 7) ngood = ngood + 1; else { console.log("Test 101_32d failed"); nerrs = nerrs + 1; }
+v101_32 = new Number("3.14");
+if (v101_32 == 3.14) ngood = ngood + 1; else { console.log("Test 101_32e failed"); nerrs = nerrs + 1; }
+v101_32 = 8 + Number("70") + new Number(600) + 5000 + Number("40000") + new Number("300000");
+if (v101_32 == 345678) ngood = ngood + 1; else { console.log("Test 101_32f failed"); nerrs = nerrs + 1; }
+////////////////////////////////////////////////////////////////////////
+// Test 101_33 - 08/29/2022 - typeof tests
+////////////////////////////////////////////////////////////////////////
+var v101_33, s101_33;
+v101_33 = 4;
+if (typeof v101_33 == "number") ngood = ngood + 1; else { console.log("Test 101_32a failed"); nerrs = nerrs + 1; }
+v101_33 = "56";
+if (typeof v101_33 == "string") ngood = ngood + 1; else { console.log("Test 101_32b failed"); nerrs = nerrs + 1; }
+v101_33 = false;
+if (typeof v101_33 == "boolean") ngood = ngood + 1; else { console.log("Test 101_32c failed"); nerrs = nerrs + 1; }
+function f101_33(aa) { return typeof aa; }
+v101_33 = f101_33;
+if (typeof v101_33 == "function") ngood = ngood + 1; else { console.log("Test 101_32d failed"); nerrs = nerrs + 1; }
+v101_33 = f101_33();
+if (v101_33 == "undefined") ngood = ngood + 1; else { console.log("Test 101_32e failed"); nerrs = nerrs + 1; }
+v101_33 = f101_33(function ff(aa) { return typeof aa; });
+if (v101_33 == "function") ngood = ngood + 1; else { console.log("Test 101_32f failed"); nerrs = nerrs + 1; }
+v101_33 = f101_33(new Number(8));
+//console.log("v101_33=", v101_33);
+if (v101_33 == "object") ngood = ngood + 1; else { console.log("Test 101_32g failed"); nerrs = nerrs + 1; }
+v101_33 = function ff(aa) { return typeof aa; };
+if (typeof v101_33 == "function") ngood = ngood + 1; else { console.log("Test 101_32h failed"); nerrs = nerrs + 1; }
+v101_33 = { firstName: "John", lastName: "Jones", age: 29 };
+if (typeof v101_33 == "object") ngood = ngood + 1; else { console.log("Test 101_32i failed"); nerrs = nerrs + 1; }
+s101_33 = typeof v101_33.firstName;
+if (s101_33 == "string") ngood = ngood + 1; else { console.log("Test 101_32j failed"); nerrs = nerrs + 1; }
+v101_33 = [12, 'three', true];
+if (typeof v101_33 == "object") ngood = ngood + 1; else { console.log("Test 101_32k failed"); nerrs = nerrs + 1; }
+s101_33 = typeof v101_33[1];
+if (s101_33 == "string") ngood = ngood + 1; else { console.log("Test 101_32l failed"); nerrs = nerrs + 1; }
+s101_33 = typeof v101_33[2];
+if (s101_33 == "boolean") ngood = ngood + 1; else { console.log("Test 101_32m failed"); nerrs = nerrs + 1; }
+v101_33 = 12, 'three', true;
+if (typeof v101_33 == "number") ngood = ngood + 1; else { console.log("Test 101_32n failed"); nerrs = nerrs + 1; }
+v101_33 = (12, 'three', true);
+if (typeof v101_33 == "boolean") ngood = ngood + 1; else { console.log("Test 101_32o failed"); nerrs = nerrs + 1; }
+v101_33 = Number;
+if (typeof v101_33 == "function") ngood = ngood + 1; else { console.log("Test 101_32p failed"); nerrs = nerrs + 1; }
+v101_33 = Number.toString;
+if (typeof v101_33 == "function") ngood = ngood + 1; else { console.log("Test 101_32q failed"); nerrs = nerrs + 1; }
+v101_33 = Number("123");
+if (typeof v101_33 == "number") ngood = ngood + 1; else { console.log("Test 101_32r failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

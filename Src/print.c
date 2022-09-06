@@ -295,21 +295,28 @@ int jpr_jvarvalue_tostring(
 
         case JVV_DTYPE_LVAL:
             if (jfmtflags & JFMT_FLAG_SHOW_TYPE) append_charval(prbuf, prlen, prmax, "LVAL: ");
-            jstat = jexp_get_rval(jx, &jvvtmp, jvv);
+            jstat = jexp_get_rval(jx, &jvvtmp, jvv, 0);
             if (!jstat) {
                 jstat = jpr_jvarvalue_tostring(jx, prbuf, prlen, prmax, jvvtmp, jfmtflags);
             }
             break;
 
         case JVV_DTYPE_INTERNAL_CLASS:
-            if (jfmtflags & JFMT_FLAG_SHOW_TYPE) append_charval(prbuf, prlen, prmax, "INT CLASS: ");
-            append_charval(prbuf, prlen, prmax, "class value");
+            if (jfmtflags & JFMT_FLAG_SHOW_TYPE)
+                append_printf(prbuf, prlen, prmax, "INT CLASS<%d>: ", jvv->jvv_val.jvv_jvvi->jvvi_nRefs);
+            append_charval(prbuf, prlen, prmax, jvv->jvv_val.jvv_jvvi->jvvi_class_name);
             break;
 
         case JVV_DTYPE_INTERNAL_METHOD:
             if (jfmtflags & JFMT_FLAG_SHOW_TYPE)
                 append_printf(prbuf, prlen, prmax, "INT METHOD<%d>: ", jvv->jvv_val.jvv_int_method->jvvim_nRefs);
-            append_charval(prbuf, prlen, prmax, "method");
+            if (jvv->jvv_val.jvv_int_method->jvvim_class.jvv_dtype == JVV_DTYPE_INTERNAL_CLASS) {
+                append_charval(prbuf, prlen, prmax, jvv->jvv_val.jvv_int_method->jvvim_class.jvv_val.jvv_jvvi->jvvi_class_name);
+                append_charval(prbuf, prlen, prmax, ".");
+            } else {
+                append_charval(prbuf, prlen, prmax, "??.");
+            }
+            append_charval(prbuf, prlen, prmax, jvv->jvv_val.jvv_int_method->jvvim_method_name);
             break;
 
         case JVV_DTYPE_INTERNAL_OBJECT:
@@ -402,7 +409,16 @@ int jpr_jvarvalue_tostring(
 
         case JVV_DTYPE_DYNAMIC:
             if (jfmtflags & JFMT_FLAG_SHOW_TYPE) append_charval(prbuf, prlen, prmax, "DYNAMIC: ");
-            jstat = jexp_get_rval(jx, &jvvtmp, jvv);
+            jstat = jexp_get_rval(jx, &jvvtmp, jvv, 0);
+            if (!jstat) {
+                jstat = jpr_jvarvalue_tostring(jx, prbuf, prlen, prmax, jvvtmp, jfmtflags);
+            }
+            break;
+
+        case JVV_DTYPE_POINTER:
+            if (jfmtflags & JFMT_FLAG_SHOW_TYPE)  append_printf(prbuf, prlen, prmax, "POINTER<%d>: ",
+                jvv->jvv_val.jvv_pointer->jvvr_nRefs);
+            jstat = jexp_get_rval(jx, &jvvtmp, jvv, 0);
             if (!jstat) {
                 jstat = jpr_jvarvalue_tostring(jx, prbuf, prlen, prmax, jvvtmp, jfmtflags);
             }
@@ -510,12 +526,106 @@ static int jpr_vartype_matches(
             if (jfmtflags & JFMT_FILTER_CLASSES) matches = 1;
             break;
 
+        case JVV_DTYPE_INTERNAL_METHOD :
+            if (jfmtflags & JFMT_FILTER_METHODS) matches = 1;
+            break;
+
         default:
             if (jfmtflags & JFMT_FILTER_VARS) matches = 1;
             break;
     }
 
     return (matches);
+}
+/***************************************************************/
+int jpr_debug_show_jvarvalue(
+    struct jrunexec * jx,
+    char ** prbuf,
+    int * prlen,
+    int * prmax,
+    char * vname,
+    int is_const,
+    struct jvarvalue * jvv,
+    int jfmtflags)
+{
+/*
+** 09/02/2022
+*/
+    int jstat = 0;
+    char jvvfbuf[64];
+
+    jpr_jvvflags_char(jvvfbuf, sizeof(jvvfbuf), jvv->jvv_flags);
+    append_printf(prbuf, prlen, prmax, " %-10s %-8s - ", vname, jvvfbuf);
+    if (is_const)
+        append_charval(prbuf, prlen, prmax, "const: " );
+    else
+        append_charval(prbuf, prlen, prmax, "     : ");
+    jstat = jpr_jvarvalue_tostring(jx, prbuf, prlen, prmax, jvv, jfmtflags);
+
+    return (jstat);
+}
+/***************************************************************/
+static int jpr_debug_show_jvarrec(
+                    struct jrunexec * jx,
+                    struct jvarrec * jvar,
+                    int tab,
+                    int jfmtflags)
+{
+/*
+** 09/02/2022
+*/
+    int jstat = 0;
+    int klen;
+    char * kval;
+    char * prbuf = NULL;
+    int prlen = 0;
+    int prmax = 0;
+    void * vcs;
+    int * pvix;
+    int is_const;
+
+    vcs = dbtsi_rewind(jvar->jvar_jvarvalue_dbt, DBTREE_READ_FORWARD);
+    do {
+        pvix = dbtsi_next(vcs);
+        if (pvix) {
+            if ((*pvix) < 0 || (*pvix) >= jvar->jvar_nconsts) {
+                printf("**** variable index %d is out of range[0-%d]",
+                    (*pvix), jvar->jvar_nconsts-1);
+            } else if (!jpr_vartype_matches(jx, jvar->jvar_aconsts + (*pvix), jfmtflags)) {
+                /* do nothing */
+            } else {
+                jpr_goto_tab(&prbuf, &prlen, &prmax, tab, TABWIDTH);
+                kval = dbtsi_get_key(vcs, &klen);
+                is_const = jpr_vix_is_const(*pvix, jvar);
+                jstat = jpr_debug_show_jvarvalue(jx, &prbuf, &prlen, &prmax,
+                    kval, is_const, jvar->jvar_aconsts + (*pvix), jfmtflags);
+
+                printf("%s\n", prbuf);
+                prlen = 0;
+            }
+        }
+    } while (!jstat && pvix);
+    dbtsi_close(vcs);
+
+    Free(prbuf);
+
+    return (jstat);
+}
+/***************************************************************/
+static int jpr_debug_show_internal_class(
+                    struct jrunexec * jx,
+                    struct jvarvalue_internal_class * jvvi,
+                    int tab,
+                    int jfmtflags)
+{
+/*
+** 09/01/2022
+*/
+    int jstat = 0;
+
+    jstat = jpr_debug_show_jvarrec(jx, jvvi->jvvi_jvar, tab, jfmtflags);
+
+    return (jstat);
 }
 /***************************************************************/
 static int jpr_debug_show_jcontext(
@@ -535,7 +645,7 @@ static int jpr_debug_show_jcontext(
     char * prbuf = NULL;
     int prlen = 0;
     int prmax = 0;
-    char jvvfbuf[64];
+    int is_const;
 
     vcs = dbtsi_rewind(jcx->jcx_jvar->jvar_jvarvalue_dbt, DBTREE_READ_FORWARD);
     do {
@@ -543,12 +653,14 @@ static int jpr_debug_show_jcontext(
         if (pvix) {
             if ((*pvix) < 0 || (*pvix) >= jcx->jcx_njvv) {
                 printf("**** variable index %d is out of range[0-%d]",
-                    (*pvix), jcx->jcx_njvv);
+                    (*pvix), jcx->jcx_njvv-1);
             } else if (!jpr_vartype_matches(jx, jcx->jcx_ajvv + (*pvix), jfmtflags)) {
                 /* do nothing */
             } else {
                 jpr_goto_tab(&prbuf, &prlen, &prmax, tab, TABWIDTH);
                 kval = dbtsi_get_key(vcs, &klen);
+
+#if 0
 #if IS_DEBUG
                 append_chars(&prbuf, &prlen, &prmax, jcx->jcx_sn, 4);
                 append_printf(&prbuf, &prlen, &prmax, " %2d ", (*pvix));
@@ -570,8 +682,37 @@ static int jpr_debug_show_jcontext(
                 else
                     append_charval(&prbuf, &prlen, &prmax, "     : ");
                 jstat = jpr_jvarvalue_tostring(jx, &prbuf, &prlen, &prmax, jcx->jcx_ajvv + (*pvix), jfmtflags);
+#endif
+
+#if IS_DEBUG
+                append_chars(&prbuf, &prlen, &prmax, jcx->jcx_sn, 4);
+                append_printf(&prbuf, &prlen, &prmax, " %2d ", (*pvix));
+#else
+                append_printf(&prbuf, &prlen, &prmax, "%2d ", (*pvix));
+#endif
+#if IS_DEBUG
+                append_chars(&prbuf, &prlen, &prmax, jcx->jcx_jvar->jvar_sn, 4);
+                append_printf(&prbuf, &prlen, &prmax, " %2d ", jcx->jcx_jvar->jvar_nRefs);
+                if (jcx->jcx_ajvv[*pvix].jvv_sn[0])
+                    append_chars(&prbuf, &prlen, &prmax, jcx->jcx_ajvv[*pvix].jvv_sn, 4);
+                else
+                    append_chars(&prbuf, &prlen, &prmax, "nosn", 4);
+#endif
+                is_const = jpr_vix_is_const(*pvix, jcx->jcx_jvar);
+                jstat = jpr_debug_show_jvarvalue(jx, &prbuf, &prlen, &prmax,
+                    kval, is_const, jcx->jcx_ajvv + (*pvix), jfmtflags);
+
                 printf("%s\n", prbuf);
                 prlen = 0;
+            }
+            if (jfmtflags & JFMT_FILTER_METHODS) {
+                switch (jcx->jcx_ajvv[*pvix].jvv_dtype) {
+                    case JVV_DTYPE_INTERNAL_CLASS:
+                        jstat = jpr_debug_show_internal_class(jx, jcx->jcx_ajvv[*pvix].jvv_val.jvv_jvvi, tab + 1, jfmtflags);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     } while (!jstat && pvix);
@@ -849,6 +990,8 @@ int jpr_exec_debug_show(
         jstat = jpr_exec_debug_show_allvars(jx, JFMT_FILTER_CLASSES);
     } else if (!strcmp(toke, "allvars")) {
         jstat = jpr_exec_debug_show_allvars(jx, JFMT_FILTER_VARS);
+    } else if (!strcmp(toke, "allclassmethods")) {
+        jstat = jpr_exec_debug_show_allvars(jx, JFMT_FILTER_CLASSES | JFMT_FILTER_METHODS);
     } else if (!strcmp(toke, "stacktrace")) {
         jstat = jpr_exec_debug_show_stacktrace(jx);
     } else if (!strcmp(toke, "runstack")) {

@@ -8,6 +8,8 @@
 #define USE_JVARVALUE_IMETHVAR      1       /* 1 passes tests */
 #define PREP_INACTIVE_EXPRESSIONS   1       /* 1 passes tests */
 #define FIX_220812                  0
+#define FIX_220830                  1
+#define FIX_220901                  1
 
 typedef int32 JSINT;
 typedef int32 JSBOOL;
@@ -93,7 +95,7 @@ enum e_jvv_type {
     JVV_DTYPE_NONE = 0          ,
     JVV_DTYPE_BOOL = 65         , /* 'A' - JVV_FIRST_DTYPE */
     JVV_DTYPE_JSINT             , /* 'B' */
-    JVV_DTYPE_JSFLOAT           , /* 'C' */
+    JVV_DTYPE_JSFLOAT           , /* 'C' - Same as Number (08/25/2022) */
     JVV_DTYPE_CHARS             , /* 'D' */
     JVV_DTYPE_NUMBER            , /* 'E' */
     JVV_DTYPE_NULL              , /* 'F' */
@@ -110,6 +112,7 @@ enum e_jvv_type {
     JVV_DTYPE_OBJECT            , /* 'Q' */   /* 10/12/2021 */
     JVV_DTYPE_OBJPTR            , /* 'R' */   /* 10/19/2021 */
     JVV_DTYPE_DYNAMIC           , /* 'S' */   /* 10/25/2021 */
+    JVV_DTYPE_POINTER           , /* 'T' */   /* 08/25/2022 */
     JVV_ZZZZ
     /* Note: Add new types to jvar_get_dtype_name() */
     /* Also: jvar_store_jvarvalue() */
@@ -167,18 +170,6 @@ struct jvarvalue_vallist {   /* jvvl_ */
     struct jvarvalue *      jvvl_avals;
 };
 
-struct jvarvalue_int_method {   /* jvvim_ */
-#if IS_DEBUG
-    char jvvim_sn[4];   /* 'I' */
-#endif
-    JVAR_INTERNAL_FUNCTION  jvvim_method;
-    char *                  jvvim_method_name;
-    struct jvarvalue *      jvvim_cjvv;
-    int                     jvvim_nRefs;
-};
-#define INCIMETHREFS(m) (((m)->jvvim_nRefs)++)
-#define DECIMETHREFS(m) (((m)->jvvim_nRefs)--)
-
 #define JVVFA_FLAG_REST_PARAM   2   /* Last parameter is ... */
 
 struct jvarvalue_funcarg {   /* jvvfa_ */
@@ -212,7 +203,11 @@ struct jvarvalue_function {   /* jvvf_ */
 struct jvarvalue_lval {   /* jvvv_ */
     struct jvarvalue              * jvvv_lval;  /* Points to existing storage */
     struct jcontext               * jvvv_var_jcx;
+#if FIX_220830
+    struct jvarvalue              * jvvv_parent;
+#else
     struct jvarvalue_object       * jvvv_jvvb;
+#endif
 };
 
 struct jvarvalue_funcvar {   /* jvvfv_ */     /* Move into jvarvalue_objptr */
@@ -286,6 +281,7 @@ struct jvarvalue {   /* jvv_ */
         struct jvarvalue_object           * jvv_val_object;    /* JVV_DTYPE_OBJECT          */
         struct jvarvalue_objptr             jvv_objptr;        /* JVV_DTYPE_OBJPTR          */
         struct jvarvalue_dynamic          * jvv_val_dynamic;   /* JVV_DTYPE_DYNAMIC         */
+        struct jvarvalue_pointer          * jvv_pointer;       /* JVV_DTYPE_POINTER         */
     } jvv_val;
     int     jvv_flags; /* 02/28/2022 */
 };
@@ -305,10 +301,27 @@ void jvar_inc_array_refs(struct jvarvalue_array * jvva, int val);
 #define DECARRAYREFS(a) (((a)->jvva_nRefs)--)
 #endif
 
+struct jvarvalue_pointer {   /* jvvr_ */
+    struct jvarvalue        jvvr_jvv;  /* created with jvar_new_jvarvalue() */
+    int                     jvvr_nRefs;
+};
+#define INCPOINTERREFS(r) (((r)->jvvr_nRefs)++)
+#define DECPOINTERREFS(r) (((r)->jvvr_nRefs)--)
+
 #define JXS_FLAGS_BEGIN_FUNC    1
 
-#define INCIOBJREFS(m) (((m)->jvvo_nRefs)++)
-#define DECIOBJREFS(m) (((m)->jvvo_nRefs)--)
+struct jvarvalue_int_method {   /* jvvim_ */
+#if IS_DEBUG
+    char jvvim_sn[4];   /* 'I' */
+#endif
+    JVAR_INTERNAL_FUNCTION  jvvim_method;
+    char *                  jvvim_method_name;
+    struct jvarvalue        jvvim_class;
+    int                     jvvim_nRefs;
+};
+#define INCIMETHREFS(m) (((m)->jvvim_nRefs)++)
+#define DECIMETHREFS(m) (((m)->jvvim_nRefs)--)
+
 struct jvarvalue_int_object {   /* jvvo_ */
 #if IS_DEBUG
     char jvvo_sn[4]; /* 'O' */
@@ -319,16 +332,27 @@ struct jvarvalue_int_object {   /* jvvo_ */
     struct jcontext   * jvvo_jcx;
     void              * jvvo_this_ptr;
 };
+#define INCIOBJREFS(m) (((m)->jvvo_nRefs)++)
+#define DECIOBJREFS(m) (((m)->jvvo_nRefs)--)
 
 struct jvarvalue_internal_class {   /* jvvi_ */
+#if IS_DEBUG
+    char jvvi_sn[4]; /* 'C' */
+#endif
     int                 jvvi_nRefs;
     struct jvarrec *    jvvi_jvar;
     char             *  jvvi_class_name;
     struct jvarvalue    jvvi_superclass;
     JVAR_FREE_OBJECT    jvvi_destructor;
 };
+#if IS_DEBUG
+void jvar_inc_internal_class_refs(struct jvarvalue_internal_class * jvvi, int val);
+#define INCICLASSHREFS(c) (jvar_inc_internal_class_refs((c),1))
+#define DECICLASSHREFS(c) (jvar_inc_internal_class_refs((c),-1))
+#else
 #define INCICLASSHREFS(c) (((c)->jvvi_nRefs)++)
 #define DECICLASSHREFS(c) (((c)->jvvi_nRefs)--)
+#endif
 
 /*****************/
 

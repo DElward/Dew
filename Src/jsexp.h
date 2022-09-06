@@ -21,7 +21,7 @@ typedef int (*JXE_UNARY_OPERATOR_FUNCTION)
          struct jvarvalue         * jvvans,
          struct jvarvalue         * jvv1);
 
-#define JX_DOT_PREC 13
+#define JX_DOT_PREC 15
 struct jexp_exp_rec { /* jxe_ */
     short jxe_bin_precedence;
     short jxe_unop_precedence;
@@ -42,6 +42,7 @@ struct jexp_exp_rec { /* jxe_ */
 #define JXE_OPFLAG_FUNCTION_CALL        128
 //#define JXE_OPFLAG_OPEN_BRACKET         256
 #define JXE_OPFLAG_POST_UNARY_OPERATION 512     /* 02/18/2022 */
+#define JXE_OPFLAG_HIPRI               1024     /* 08/24/2022 */
 /* See: jexp_print_stack() */
 
 //#define HIGHEST_PRECEDENCE      2
@@ -127,7 +128,9 @@ int jvar_assign_jvarvalue(
 //      struct jvarvalue ** prtnjvv);
 int jexp_get_rval(struct jrunexec * jx,
     struct jvarvalue ** ptgtjvv,
-    struct jvarvalue * srcjvv);
+    struct jvarvalue * srcjvv,
+    int rvalflags);
+#define RVAL_FLAGS_KEEP_POINTER     1
 struct jexp_exp_rec * jeval_get_exp_list(void);
 int jexp_eval_function_stmt_inactive(
                     struct jrunexec * jx,

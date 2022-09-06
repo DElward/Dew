@@ -1205,3 +1205,14 @@ ss = ss + 2;
 console.log("ii=", ii, "typeof ii=", typeof ii);
 console.log("ss=", ss, "typeof ss=", typeof ss);
 ////////////////////////////////////////////////////////////////////////
+////    08/24/2022
+////////////////////////////////////////////////////////////////////////
+function Car(make, model, year) {
+    this.make = make;
+    this.model = model;
+    this.year = year;
+}
+
+const car1 = new Car('Eagle', 'Talon TSi', 1993);
+console.log(car1.make);     // Exp: "Eagle"
+////////////////////////////////////////////////////////////////////////

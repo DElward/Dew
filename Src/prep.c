@@ -405,7 +405,9 @@ static int jprep_eval(
                             xlx = GET_XLX(*pjtok);
                         }
                     }
-                    if (xlx >= 0 && (jxe[xlx].jxe_opflags & JXE_OPFLAG_BINARY_OPERATION)) {
+                    if ((xlx >= 0 && (jxe[xlx].jxe_opflags & JXE_OPFLAG_BINARY_OPERATION)) ||
+                        ((*pjtok)->jtok_kw == JSPU_COMMA && parens > 0)) {  /* 08/29/2022 */
+                    //if (xlx >= 0 && (jxe[xlx].jxe_opflags & JXE_OPFLAG_BINARY_OPERATION)) {
                         jstat = jrun_next_token(jx, pjtok);
                     } else {
                         if (!parens) done = 1;

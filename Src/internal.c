@@ -31,6 +31,21 @@ struct jint_module_rec {     /* jmr_ */
 };
 
 /***************************************************************/
+#if IS_DEBUG
+void jvar_inc_internal_class_refs(struct jvarvalue_internal_class * jvvi, int val)
+{
+/*
+** 09/01/2022
+*/
+    jvvi->jvvi_nRefs += val;
+    if (jvvi->jvvi_nRefs < 0) {
+        printf("******** jvvi->jvvi_nRefs < 0 ********\n");
+    } else if (jvvi->jvvi_nRefs > 10000) {
+        printf("******** jvvi->jvvi_nRefs > 10000 = %d ********\n", jvvi->jvvi_nRefs);
+    }
+}
+#endif
+/***************************************************************/
 static void jrun_init_internal_class(
         struct jrunexec  * jx,
         const char       * class_name,
@@ -41,9 +56,20 @@ static void jrun_init_internal_class(
 /*
 **
 */
+#if IS_DEBUG
+    static int next_jvvi_sn = 0;
+#endif
+
     jvar_init_jvarvalue(jvv);
     jvv->jvv_dtype = JVV_DTYPE_INTERNAL_CLASS;
     jvv->jvv_val.jvv_jvvi = New(struct jvarvalue_internal_class, 1);
+#if IS_DEBUG
+    jvv->jvv_val.jvv_jvvi->jvvi_sn[0] = 'C';
+    jvv->jvv_val.jvv_jvvi->jvvi_sn[1] = (next_jvvi_sn / 100) % 10 + '0';
+    jvv->jvv_val.jvv_jvvi->jvvi_sn[2] = (next_jvvi_sn /  10) % 10 + '0';
+    jvv->jvv_val.jvv_jvvi->jvvi_sn[3] = (next_jvvi_sn      ) % 10 + '0';
+    next_jvvi_sn++;
+#endif
     jvv->jvv_val.jvv_jvvi->jvvi_jvar = jvar_new_jvarrec();
     INCVARRECREFS(jvv->jvv_val.jvv_jvvi->jvvi_jvar);
     jvv->jvv_val.jvv_jvvi->jvvi_nRefs = 0;
@@ -688,7 +714,7 @@ int jint_JSint_toString(
 ** 02/15/2022
 */
     int jstat = 0;
-    JSINT * jsi = (JSINT *)this_ptr;
+    JSINT * jsi = (JSINT *)this_ptr;    /* See jexp_binop_dot() */
     char numbuf[16];
 
     sprintf(numbuf, "%d", (*jsi));
@@ -712,6 +738,88 @@ int jrun_load_type_JSInt(struct jrunexec * jx)
     if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
 
     if (!jstat) jstat = jrun_add_internal_type_object(jx, JVV_DTYPE_JSINT, &jvv);
+
+    return (jstat);
+}
+/***************************************************************/
+int jint_Number_toString(
+        struct jrunexec  * jx,
+        const char       * func_name,
+        void             * this_ptr,
+        struct jvarvalue * jvvlargs,
+        struct jvarvalue * jvvrtn)
+{
+/*
+** 08/25/2022
+*/
+    int jstat = 0;
+    JSFLOAT * jsf = (JSFLOAT *)this_ptr;    /* See jexp_binop_dot() */
+    char numbuf[32];
+
+    sprintf(numbuf, "%g", (*jsf));  /* See jpr_jvarvalue_tostring() */
+    jvar_store_chars_len(jvvrtn, numbuf, IStrlen(numbuf));
+
+    return (jstat);
+}
+/***************************************************************/
+int jint_Number__new(
+        struct jrunexec  * jx,
+        const char       * func_name,
+        void             * this_ptr,
+        struct jvarvalue * jvvlargs,
+        struct jvarvalue * jvvrtn)
+{
+/*
+** 08/25/2022
+struct jvarvalue_pointer {
+    struct jvarvalue        jvvr_jvv;
+    int                     jvvr_nRefs;
+};
+
+*/
+    int jstat = 0;
+    JSFLOAT fltval;
+
+    fltval = 0.0;
+
+    if (jvvlargs->jvv_val.jvv_jvvl->jvvl_nvals > 0) {
+        jstat = jrun_ensure_number(jx, &(jvvlargs->jvv_val.jvv_jvvl->jvvl_avals[0]), &fltval, 0);
+    }
+
+#ifdef OLD_WAY
+    if (!jstat) {
+        jvvr = jvar_new_jvarvalue_pointer();
+        jvvr->jvvr_jvv.jvv_dtype = JVV_DTYPE_JSFLOAT;
+        jvvr->jvvr_jvv.jvv_val.jvv_val_jsfloat = fltval;
+        jvvrtn->jvv_dtype = JVV_DTYPE_POINTER;
+        jvvrtn->jvv_val.jvv_pointer   = jvvr;
+    }
+#else
+    if (!jstat) {
+        jvvrtn->jvv_dtype = JVV_DTYPE_JSFLOAT;
+        jvvrtn->jvv_val.jvv_val_jsfloat = fltval;
+    }
+#endif
+
+    return (jstat);
+}
+/***************************************************************/
+int jrun_load_type_Number(struct jrunexec * jx)
+{
+/*
+** 08/25/2022
+*/
+    int jstat = 0;
+    struct jvarvalue jvv;
+
+    jrun_init_internal_class(jx, JVV_INTERNAL_TYPE_CLASS_Number, NULL, NULL, &jvv);
+
+    jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD_toString, jint_Number_toString, JCX_FLAG_METHOD);
+    jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD__new, jint_Number__new, JCX_FLAG_METHOD);
+
+    if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
+
+    if (!jstat) jstat = jrun_add_internal_type_object(jx, JVV_DTYPE_JSFLOAT, &jvv);
 
     return (jstat);
 }
@@ -752,12 +860,9 @@ int jrun_load_type_methods(struct jrunexec * jx)
     int jstat = 0;
 
     jstat = jrun_load_type_String(jx);
-    if (!jstat) {
-        jstat = jrun_load_type_JSInt(jx);
-    }
-    if (!jstat) {
-        jstat = jrun_load_type_Array(jx);
-    }
+    if (!jstat) jstat = jrun_load_type_JSInt(jx);
+    if (!jstat) jstat = jrun_load_type_Number(jx);
+    if (!jstat)  jstat = jrun_load_type_Array(jx);
 
     return (jstat);
 }

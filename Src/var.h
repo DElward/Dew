@@ -60,6 +60,9 @@ void jvar_push_vars(struct jrunexec * jx, struct jvarrec * jvar);
 struct jvarvalue * jvar_int_object_member(struct jrunexec * jx,
     struct jvarvalue * cjvv,
     const char * mbrname);
+struct jvarvalue * jvar_int_class_member(struct jrunexec * jx,
+    struct jvarvalue * cjvv,
+    const char * mbrname);
 int jvar_add_class_method(
     struct jrunexec * jx,
     struct jvarvalue * cjvv,
@@ -135,7 +138,14 @@ int jvar_dup_jvarvalue(
     struct jvarvalue ** p_jvvtgt,
     struct jvarvalue * jvvsrc);
 
-#define ENSINT_FLAG_INTERR  1
+#define ENSURE_FLAG_ERROR               1
+#define ENSURE_FLAG_REQUIRE_INTEGER     2
+
+int jrun_ensure_number(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    JSFLOAT *fltval,
+    int ensflags);
 int jrun_ensure_int(
         struct jrunexec * jx,
         struct jvarvalue * jvv,
@@ -163,5 +173,11 @@ struct jvarvalue * jvar_begin_iterate_jvv(
         struct jvv_iterator * jvvit,
         struct jvarvalue * jvvlargs);  /* 03/22/2022 */
 void jvar_close_iterate_jvv_data(struct jvv_iterator * jvvit);          /* 03/22/2022 */
+struct jvarvalue_pointer * jvar_new_jvarvalue_pointer(void);
+void jvar_free_jvarvalue_pointer(struct jvarvalue_pointer * jvvr);
+int jvar_calc_typeof(struct jrunexec * jx,
+        struct jvarvalue * jvv,
+        char ** typeofstr,
+        int   * typeoflen);
 /***************************************************************/
 #endif /* VARH_INCLUDED */

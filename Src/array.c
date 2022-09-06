@@ -341,7 +341,7 @@ int jint_set_Array_length(struct jrunexec  * jx,
     struct jvarvalue_array * jvva;
 
     jvva = (struct jvarvalue_array *)jvvy->jvvy_this_ptr;
-    jstat = jrun_ensure_int(jx, jvv, &intval, ENSINT_FLAG_INTERR);
+    jstat = jrun_ensure_int(jx, jvv, &intval, ENSURE_FLAG_ERROR);
     if (!jstat) {
         jstat = jint_set_array_size(jx, jvva, intval);
     }
@@ -480,7 +480,7 @@ int jint_Array_subscript(
         return (jstat);
     }
 
-    jstat = jrun_ensure_int(jx, jvvargs, &intval, ENSINT_FLAG_INTERR);
+    jstat = jrun_ensure_int(jx, jvvargs, &intval, ENSURE_FLAG_ERROR);
     if (!jstat) {
         INCARRAYREFS(jvva);
         jvvy = new_jvarvalue_dynamic();

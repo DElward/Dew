@@ -488,10 +488,17 @@ int jpr_object_tostring(
     return (jstat);
 }
 /***************************************************************/
+#if FIX_220830
+int jexp_binop_dot_object(struct jrunexec * jx,
+    struct jvarvalue * jvvobject,
+    struct jvarvalue * jvvparent,
+    struct jvarvalue * jvvfield)
+#else
 int jexp_binop_dot_object(struct jrunexec * jx,
     struct jvarvalue * jvvobject,
     struct jvarvalue_object * jvvb,
     struct jvarvalue * jvvfield)
+#endif
 {
 /*
 ** 03/03/2022
@@ -499,6 +506,9 @@ int jexp_binop_dot_object(struct jrunexec * jx,
     int jstat = 0;
     int * pvix;
     struct jvarvalue * jvvsrc;
+#if FIX_220830
+    struct jvarvalue_object * jvvb = jvvparent->jvv_val.jvv_val_object;
+#endif
 
 #if IS_DEBUG
     /* jvv_dtype should be checked before getting here. */
@@ -526,7 +536,13 @@ int jexp_binop_dot_object(struct jrunexec * jx,
             jvar_store_lval(jx, jvvobject, jvvsrc, NULL);
             /* jexp_quick_print(jx, jvvobject, "Object dot "); */
             if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
+#if FIX_220830
+                jvvobject->jvv_val.jvv_lval.jvvv_parent = jvar_new_jvarvalue();
+                jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_dtype = JVV_DTYPE_OBJECT;
+                jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_val.jvv_val_object = jvvb;
+#else
                 jvvobject->jvv_val.jvv_lval.jvvv_jvvb = jvvb;
+#endif
             }
         }
     }

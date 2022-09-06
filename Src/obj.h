@@ -27,10 +27,17 @@ int jpr_object_tostring(
     int * prmax,
     struct jvarvalue_object * jvvb,
     int jfmtflags);
+#if FIX_220830
+int jexp_binop_dot_object(struct jrunexec * jx,
+    struct jvarvalue * jvvobject,
+    struct jvarvalue * jvvparent,
+    struct jvarvalue * jvvfield);
+#else
 int jexp_binop_dot_object(struct jrunexec * jx,
     struct jvarvalue * jvvobject,
     struct jvarvalue_object * jvvb,
     struct jvarvalue * jvvfield);
+#endif
 
 /***************************************************************/
 #endif /* OBJH_INCLUDED */

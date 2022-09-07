@@ -823,6 +823,13 @@ v101_32 = new Number("3.14");
 if (v101_32 == 3.14) ngood = ngood + 1; else { console.log("Test 101_32e failed"); nerrs = nerrs + 1; }
 v101_32 = 8 + Number("70") + new Number(600) + 5000 + Number("40000") + new Number("300000");
 if (v101_32 == 345678) ngood = ngood + 1; else { console.log("Test 101_32f failed"); nerrs = nerrs + 1; }
+v101_32 = new String("abc") + new Number("70");
+if (v101_32 == "abc70") ngood = ngood + 1; else { console.log("Test 101_32g failed"); nerrs = nerrs + 1; }
+if (Boolean(0) == false) ngood = ngood + 1; else { console.log("Test 101_32h failed"); nerrs = nerrs + 1; }
+if (Boolean(2) == true) ngood = ngood + 1; else { console.log("Test 101_32i failed"); nerrs = nerrs + 1; }
+if (Boolean('false') == true) ngood = ngood + 1; else { console.log("Test 101_32j failed"); nerrs = nerrs + 1; }
+if (Boolean('') == false) ngood = ngood + 1; else { console.log("Test 101_32k failed"); nerrs = nerrs + 1; }
+if (Boolean(' ') == true) ngood = ngood + 1; else { console.log("Test 101_32l failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 // Test 101_33 - 08/29/2022 - typeof tests
 ////////////////////////////////////////////////////////////////////////

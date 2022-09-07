@@ -21,6 +21,9 @@
 #define JFMT_ORIGIN_TOCHARS             0x000040
 #define JFMT_ORIGIN_INTERPOLATE         0x000080
 #define JFMT_ORIGIN_EVAL                0x000100
+#define JFMT_ORIGIN_unused_1            0x000200
+#define JFMT_ORIGIN_unused_2            0x000400
+#define JFMT_ORIGIN_unused_3            0x000800
 
 /* filters - bits - for jpr_vartype_matches() */
 #define JFMT_FILTER_VARS               0x1000000

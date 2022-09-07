@@ -170,5 +170,6 @@ void append_printf(char ** cstr,
                     ...);
 void erase_charbuf(char ** cstr, int * slen, int * smax);
 void init_charbuf(char ** cstr, int * slen, int * smax);
+int convert_string_to_boolean(const char * boolbuf, int * boolans, int ensflags);
 /***************************************************************/
 #endif /* UTLH_INCLUDED */

@@ -1883,3 +1883,22 @@ int convert_string_to_number(const char * numbuf, int * intans, double * dblans)
     return (cstat);
 }
 /***************************************************************/
+int convert_string_to_boolean(const char * boolbuf, int * boolans, int ensflags)
+{
+/*
+**  Returns:
+**      -1  : Boolean contains invalid characters
+**       0  : Answer is in boolans
+**
+** 09/07/2022
+*/
+    int cstat;
+
+    cstat = 0;
+    (*boolans) = 0;
+
+    if (boolbuf[0]) (*boolans) = 1;
+
+    return (cstat);
+}
+/***************************************************************/

@@ -1643,7 +1643,7 @@ int jrun_ensure_number(
 }
 /***************************************************************/
 #ifdef OLD_WAY
-int jrun_ensure_int(
+int xxxjrun_ensure_int(
     struct jrunexec * jx,
     struct jvarvalue * jvv,
     JSINT *intval,
@@ -1751,6 +1751,81 @@ int jrun_ensure_int(
     return (jstat);
 }
 #endif
+/***************************************************************/
+int jrun_ensure_boolean(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    int * boolval,
+    int ensflags)
+{
+/*
+** 09/07/2022
+*/
+    int jstat = 0;
+    int cstat;
+    int boolans;
+    struct jvarvalue * rjvv;
+
+    (*boolval) = 0;
+
+    switch (jvv->jvv_dtype) {
+        
+        case JVV_DTYPE_BOOL   :
+            (*boolval) = jvv->jvv_val.jvv_val_bool?1:0;
+            break;
+
+        case JVV_DTYPE_JSINT   :
+            (*boolval) = jvv->jvv_val.jvv_val_jsint?1:0;
+            break;
+
+        case JVV_DTYPE_JSFLOAT   :
+            (*boolval) = jvv->jvv_val.jvv_val_jsfloat?1:0;
+            break;
+
+        case JVV_DTYPE_CHARS   :
+            cstat = convert_string_to_boolean(jvv->jvv_val.jvv_val_chars->jvvc_val_chars, &boolans, ensflags);
+            if (cstat == 0) (*boolval) = boolans;
+            else if (ensflags & ENSURE_FLAG_ERROR) {
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_BOOLEAN,
+                    "Expecting boolean. Found string: %s",        
+                    jvv->jvv_val.jvv_val_chars->jvvc_val_chars);
+            }
+            break;
+
+        case JVV_DTYPE_LVAL:
+            jstat = jrun_ensure_boolean(jx, jvv->jvv_val.jvv_lval.jvvv_lval, boolval, ensflags);
+            break;
+
+        case JVV_DTYPE_DYNAMIC:
+            jstat = (jvv->jvv_val.jvv_val_dynamic->jvvy_get_proc)(jx,
+                jvv->jvv_val.jvv_val_dynamic,
+                NULL,
+                &rjvv);
+            if (!jstat) {
+                jstat = jrun_ensure_boolean(jx, rjvv, boolval, ensflags);
+            }
+            break;
+
+        case JVV_DTYPE_NONE   :
+        case JVV_DTYPE_INTERNAL_CLASS:
+        case JVV_DTYPE_INTERNAL_METHOD:
+        case JVV_DTYPE_INTERNAL_OBJECT:
+        case JVV_DTYPE_VALLIST:
+        case JVV_DTYPE_TOKEN:
+        case JVV_DTYPE_FUNCTION:
+        case JVV_DTYPE_FUNCVAR   :
+        case JVV_DTYPE_ARRAY:
+        default:
+            if (ensflags & ENSURE_FLAG_ERROR) {
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_BOOLEAN,
+                    "Expecting boolean. Found type: %s",        
+                    jvar_get_dtype_name(jvv->jvv_dtype));
+            }
+            break;
+    }
+
+    return (jstat);
+}
 /***************************************************************/
 int jrun_ensure_chars(
     struct jrunexec * jx,

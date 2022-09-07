@@ -179,5 +179,10 @@ int jvar_calc_typeof(struct jrunexec * jx,
         struct jvarvalue * jvv,
         char ** typeofstr,
         int   * typeoflen);
+int jrun_ensure_boolean(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    int * boolval,
+    int ensflags);
 /***************************************************************/
 #endif /* VARH_INCLUDED */

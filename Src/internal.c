@@ -678,6 +678,41 @@ int jint_String_toString(
     return (jstat);
 }
 /***************************************************************/
+static int jint_String__new(
+        struct jrunexec  * jx,
+        const char       * func_name,
+        void             * this_ptr,
+        struct jvarvalue * jvvlargs,
+        struct jvarvalue * jvvrtn)
+{
+/*
+** 09/06/2022
+*/
+    int jstat = 0;
+    int jfmtflags;
+    char * prbuf = NULL;
+    int prlen = 0;
+    int prmax = 0;
+
+    prbuf = NULL;
+    prlen = 0;
+    prmax = 0;
+    jfmtflags = JFMT_ORIGIN_TOCHARS;
+
+    if (jvvlargs->jvv_val.jvv_jvvl->jvvl_nvals > 0) {
+        jstat = jpr_jvarvalue_tostring(jx, &prbuf, &prlen, &prmax,
+            &(jvvlargs->jvv_val.jvv_jvvl->jvvl_avals[0]), jfmtflags);
+        if (!jstat) {
+            jvar_store_chars_len(jvvrtn, prbuf, prlen);
+            Free(prbuf);
+        }
+    } else {
+        jvar_store_chars_len(jvvrtn, "", 0);
+    }
+
+    return (jstat);
+}
+/***************************************************************/
 int jrun_load_type_String(struct jrunexec * jx)
 {
 /*
@@ -689,12 +724,9 @@ int jrun_load_type_String(struct jrunexec * jx)
     jrun_init_internal_class(jx, JVV_INTERNAL_TYPE_CLASS_String, NULL, NULL, &jvv);
 
     jstat = jrun_new_internal_class_method(jx, &jvv, "length"     , jint_String_length     , JCX_FLAG_PROPERTY);
-    if (!jstat) {
-        jstat = jrun_new_internal_class_method(jx, &jvv, "substring"  , jint_String_substring  , JCX_FLAG_METHOD);
-    }
-    if (!jstat) {
-        jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD_toString, jint_String_toString, JCX_FLAG_METHOD);
-    }
+    if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, "substring"  , jint_String_substring  , JCX_FLAG_METHOD);
+    if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD_toString, jint_String_toString, JCX_FLAG_METHOD);
+    if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD__new, jint_String__new, JCX_FLAG_METHOD);
 
     if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
 
@@ -738,6 +770,52 @@ int jrun_load_type_JSInt(struct jrunexec * jx)
     if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
 
     if (!jstat) jstat = jrun_add_internal_type_object(jx, JVV_DTYPE_JSINT, &jvv);
+
+    return (jstat);
+}
+/***************************************************************/
+int jint_Boolean__new(
+        struct jrunexec  * jx,
+        const char       * func_name,
+        void             * this_ptr,
+        struct jvarvalue * jvvlargs,
+        struct jvarvalue * jvvrtn)
+{
+/*
+** 09/07/2022
+*/
+    int jstat = 0;
+    int boolval;
+
+    boolval = 0;
+
+    if (jvvlargs->jvv_val.jvv_jvvl->jvvl_nvals > 0) {
+        jstat = jrun_ensure_boolean(jx, &(jvvlargs->jvv_val.jvv_jvvl->jvvl_avals[0]), &boolval, 0);
+    }
+
+    if (!jstat) {
+        jvvrtn->jvv_dtype = JVV_DTYPE_BOOL;
+        jvvrtn->jvv_val.jvv_val_bool = boolval;
+    }
+
+    return (jstat);
+}
+/***************************************************************/
+int jrun_load_type_Boolean(struct jrunexec * jx)
+{
+/*
+** 09/07/2022
+*/
+    int jstat = 0;
+    struct jvarvalue jvv;
+
+    jrun_init_internal_class(jx, JVV_INTERNAL_TYPE_CLASS_Boolean, NULL, NULL, &jvv);
+
+    if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD__new, jint_Boolean__new, JCX_FLAG_METHOD);
+
+    if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
+
+    if (!jstat) jstat = jrun_add_internal_type_object(jx, JVV_DTYPE_BOOL, &jvv);
 
     return (jstat);
 }
@@ -815,7 +893,7 @@ int jrun_load_type_Number(struct jrunexec * jx)
     jrun_init_internal_class(jx, JVV_INTERNAL_TYPE_CLASS_Number, NULL, NULL, &jvv);
 
     jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD_toString, jint_Number_toString, JCX_FLAG_METHOD);
-    jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD__new, jint_Number__new, JCX_FLAG_METHOD);
+    if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD__new, jint_Number__new, JCX_FLAG_METHOD);
 
     if (!jstat) jstat = jrun_add_internal_class(jx, &jvv);
 
@@ -860,6 +938,7 @@ int jrun_load_type_methods(struct jrunexec * jx)
     int jstat = 0;
 
     jstat = jrun_load_type_String(jx);
+    if (!jstat) jstat = jrun_load_type_Boolean(jx);
     if (!jstat) jstat = jrun_load_type_JSInt(jx);
     if (!jstat) jstat = jrun_load_type_Number(jx);
     if (!jstat)  jstat = jrun_load_type_Array(jx);

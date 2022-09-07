@@ -220,30 +220,39 @@ static void jvar_cat_chars(
 {
 /*
 ** 03/15/2022
+**
+** Reworked for JVV_DTYPE_POINTER points to jvv_chars1 on 09/06/2022
 */
     int tlen;
+    struct jvarvalue_chars * jvvc;
 
     tlen = jvv_chars1->jvvc_length + jvv_chars2->jvvc_length;
     if (jvvtgt->jvv_dtype != JVV_DTYPE_CHARS) {
-        jvar_free_jvarvalue_data(jvvtgt);
-        jvvtgt->jvv_dtype = JVV_DTYPE_CHARS;
-        jvvtgt->jvv_val.jvv_val_chars = jvar_new_jvarvalue_chars(); /* 08/19/2022 */
-        jvvtgt->jvv_val.jvv_val_chars->jvvc_size = tlen + JVARVALUE_CHARS_MIN;
-        jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars =
-            New(char, jvvtgt->jvv_val.jvv_val_chars->jvvc_size);
-    } else if (tlen + 1 >= jvvtgt->jvv_val.jvv_val_chars->jvvc_size) {
-        jvvtgt->jvv_val.jvv_val_chars->jvvc_size = tlen + JVARVALUE_CHARS_MIN;
-        jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars =
-            Realloc(jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars, char, \
-                jvvtgt->jvv_val.jvv_val_chars->jvvc_size);
+        jvvc = jvar_new_jvarvalue_chars();
+        jvvc->jvvc_size = tlen + JVARVALUE_CHARS_MIN;
+        jvvc->jvvc_val_chars =
+            New(char, jvvc->jvvc_size);
+    } else {
+        jvvc = jvvtgt->jvv_val.jvv_val_chars;
+        if (tlen + 1 >= jvvc->jvvc_size) {
+            jvvc->jvvc_size = tlen + JVARVALUE_CHARS_MIN;
+            jvvc->jvvc_val_chars =
+                Realloc(jvvc->jvvc_val_chars, char, jvvc->jvvc_size);
+        }
     }
 
-    memcpy(jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars,
+    memcpy(jvvc->jvvc_val_chars,
            jvv_chars1->jvvc_val_chars, jvv_chars1->jvvc_length);
-    memcpy(jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars + jvv_chars1->jvvc_length,
+    memcpy(jvvc->jvvc_val_chars + jvv_chars1->jvvc_length,
            jvv_chars2->jvvc_val_chars, jvv_chars2->jvvc_length);
-    jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars[tlen] = '\0';
-    jvvtgt->jvv_val.jvv_val_chars->jvvc_length = tlen;
+    jvvc->jvvc_val_chars[tlen] = '\0';
+    jvvc->jvvc_length = tlen;
+
+    if (jvvtgt->jvv_dtype != JVV_DTYPE_CHARS) {
+        jvar_free_jvarvalue_data(jvvtgt);
+        jvvtgt->jvv_dtype = JVV_DTYPE_CHARS;
+        jvvtgt->jvv_val.jvv_val_chars = jvvc;
+    }
 }
 #else
 static void jvar_cat_chars(

@@ -24,6 +24,7 @@
 
 /* Type classes */
 #define JVV_INTERNAL_TYPE_CLASS_JSInt       "@Integer"
+#define JVV_INTERNAL_TYPE_CLASS_Boolean     "Boolean"
 #define JVV_INTERNAL_TYPE_CLASS_Number      "Number"
 #define JVV_INTERNAL_TYPE_CLASS_String      "String"
 #define JVV_INTERNAL_TYPE_CLASS_Array       "Array"

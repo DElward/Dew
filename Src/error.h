@@ -68,6 +68,7 @@
 #define JSERR_UNDEFINED_CLASS                   (-9856)
 #define JSERR_INVALID_CLASS                     (-9857)
 #define JSERR_CONVERT_TO_NUM                    (-9858)
+#define JSERR_CONVERT_TO_BOOLEAN                (-9859)
 
 #define JSERR_RUNTIME_STACK_OVERFLOW            (-7801)
 #define JSERR_RUNTIME_STACK_UNDERFLOW           (-7802)

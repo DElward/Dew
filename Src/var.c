@@ -518,6 +518,26 @@ void jvar_store_function(
     jvvsrc->jvv_val.jvv_val_function = NULL;
 }
 /***************************************************************/
+void jvar_store_this(struct jrunexec * jx, struct jvarvalue * jvv)
+{
+/*
+** 09/15/2022
+*/
+    struct jvarvalue_object * this_obj;
+
+    jvar_free_jvarvalue_data(jvv);
+
+    this_obj = jvar_get_current_object(jx);
+    if (this_obj) {
+        jvv->jvv_dtype = JVV_DTYPE_OBJECT;
+        jvv->jvv_val.jvv_val_object = this_obj;
+        INCOBJREFS(this_obj);
+    } else {
+        jvv->jvv_dtype = JVV_DTYPE_NULL;
+        jvv->jvv_val.jvv_void = NULL;
+    }
+}
+/***************************************************************/
 int jvar_store_jvarvalue(
     struct jrunexec * jx,
     struct jvarvalue * jvvtgt,
@@ -1425,6 +1445,20 @@ struct jfuncstate * jvar_get_current_jfuncstate(struct jrunexec * jx)
     }
 
     return (jxfs);
+}
+/***************************************************************/
+struct jvarvalue_object * jvar_get_current_object(struct jrunexec * jx)
+{
+/*
+** 09/13/2022
+*/
+    struct jvarvalue_object * this_obj = NULL;
+
+    if (jx->jx_njfs) {
+        this_obj = jx->jx_jfs[jx->jx_njfs - 1]->jfs_this_obj;
+    }
+
+    return (this_obj);
 }
 /***************************************************************/
 struct jcontext * jvar_get_head_jcontext(struct jrunexec * jx)

@@ -1208,11 +1208,25 @@ console.log("ss=", ss, "typeof ss=", typeof ss);
 ////    08/24/2022
 ////////////////////////////////////////////////////////////////////////
 function Car(make, model, year) {
+    function Engine(typ, num) {
+        console.log("Enter Engine()");
+        this.engType = typ;
+        this.engNum = num;
+    }
+    console.log("Enter Car()");
+    new Engine('piston', 6);
     this.make = make;
     this.model = model;
     this.year = year;
+    var make = "BMW";
+
+    make = make + "Ford";
+    this.make = this.make + "Honda";
+
+    console.log("make=", make);             // Exp: make= BMWFord
+    console.log("this.make=", this.make);   // Exp: this.make= EagleHonda
 }
 
 const car1 = new Car('Eagle', 'Talon TSi', 1993);
-console.log(car1.make);     // Exp: "Eagle"
+console.log("car1.make=", car1.make);       // Exp: car1.make= EagleHonda
 ////////////////////////////////////////////////////////////////////////

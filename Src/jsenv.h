@@ -213,7 +213,7 @@ struct jvarvalue_lval {   /* jvvv_ */
 struct jvarvalue_funcvar {   /* jvvfv_ */     /* Move into jvarvalue_objptr */
     struct jvarvalue_function     * jvvfv_jvvf;
     struct jcontext               * jvvfv_var_jcx;
-    struct jvarvalue_int_object   * jvvfv_this_obj;
+    struct jvarvalue_object       * jvvfv_this_obj; /* Made jvarvalue_object 09/13/2022 */
 };
 struct jvarvalue_imethvar {   /* jvvimv_ */     /* Move into jvarvalue_objptr */
     struct jvarvalue_int_method   * jvvimv_jvvim;
@@ -375,6 +375,7 @@ struct jfuncstate {   /* jfs_ */
     struct jvarvalue_function * jfs_jvvf;
     struct jcontext           * jfs_jcx;
     struct jcontext           * jfs_prev_jcx;
+    struct jvarvalue_object   * jfs_this_obj;
 };
 
 struct jrunexec {   /* jx_ */
@@ -490,6 +491,7 @@ void jrun_get_current_jxc(struct jrunexec * jx, struct jxcursor * current_jxc);
 void jrun_set_current_jxc(struct jrunexec * jx, struct jxcursor * current_jxc);
 int jrun_push_jfuncstate(struct jrunexec * jx,
     struct jvarvalue_function * fjvv,
+    struct jvarvalue_object * this_obj,
     struct jcontext * outer_jcx);
 int jrun_pop_jfuncstate(struct jrunexec * jx);
 int jrun_push_xstat(struct jrunexec * jx, int xstat);

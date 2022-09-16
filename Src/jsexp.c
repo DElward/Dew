@@ -161,6 +161,7 @@ void jvar_store_lval(
         jvvtgt->jvv_dtype = JVV_DTYPE_FUNCVAR;
         jvvtgt->jvv_val.jvv_val_funcvar.jvvfv_jvvf = jvvsrc->jvv_val.jvv_val_function;
         jvvtgt->jvv_val.jvv_val_funcvar.jvvfv_var_jcx = var_jcx;
+        jvvtgt->jvv_val.jvv_val_funcvar.jvvfv_this_obj = NULL;
         INCFUNCREFS(jvvsrc->jvv_val.jvv_val_function);
     } else if (jvvsrc->jvv_dtype == JVV_DTYPE_OBJPTR) {
             switch (jvvsrc->jvv_val.jvv_objptr.jvvp_pval->jvv_dtype) {
@@ -2384,6 +2385,10 @@ static int jexp_eval_primary(
                 case JSKW_FUNCTION:
                     jstat = jvar_parse_function_operand(jx, pjtok, jvv);
                     break;
+                case JSKW_THIS:
+                    jvar_store_this(jx, jvv);
+                    jstat = jrun_next_token(jx, pjtok);
+                    break;
                 default:
                     jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNEXPECTED_KEYWORD,
                         "Unexpected keyword: %s", (*pjtok)->jtok_text);
@@ -2606,7 +2611,7 @@ int jexp_call_function(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok,
                     struct jvarvalue_function * jvvf,
-                    struct jvarvalue_int_object * this_obj,
+                    struct jvarvalue_object * this_obj,
                     struct jvarvalue * jvvparms,
                     struct jcontext * outer_jcx,
                     struct jvarvalue * rtnjvv)
@@ -2631,7 +2636,7 @@ int jexp_call_function(
         XSTAT_FLAGS(jx) |= JXS_FLAGS_BEGIN_FUNC;
     }
 
-    jstat = jrun_push_jfuncstate(jx, jvvf, outer_jcx);  /* sets cursor */
+    jstat = jrun_push_jfuncstate(jx, jvvf, this_obj, outer_jcx);  /* sets cursor */
 
     if (!jstat) jstat = jexp_assign_parameters(jx, jvvf, jvvparms);
 
@@ -3374,7 +3379,7 @@ static int jexp_method_call(
     struct jvarvalue_vallist jvvl;
     struct jcontext * jcx;
     struct jvarvalue_function * jvvf;
-    struct jvarvalue_int_object   * this_obj;
+    struct jvarvalue_object   * this_obj;
     struct jvarvalue  * jvvfunc;
     struct jvarvalue  * mjvv;
 
@@ -3405,36 +3410,6 @@ static int jexp_method_call(
         mjvv = fjvv;
     }
 
-#ifdef OLD_WAY
-    if (mjvv->jvv_dtype == JVV_DTYPE_FUNCVAR) {
-        jvvf = mjvv->jvv_val.jvv_val_funcvar.jvvfv_jvvf;
-        jcx = mjvv->jvv_val.jvv_val_funcvar.jvvfv_var_jcx;
-        this_obj = mjvv->jvv_val.jvv_val_funcvar.jvvfv_this_obj;
-        jstat = jexp_call_function(jx, pjtok, jvvf, this_obj, jvvargs, jcx, rtnjvv);
-    } else if (mjvv->jvv_dtype == JVV_DTYPE_IMETHVAR) {
-        jstat = jexp_internal_method_call(jx, mjvv->jvv_val.jvv_val_imethvar.jvvimv_jvvim,
-            mjvv->jvv_val.jvv_val_imethvar.jvvimv_this_ptr, jvvargs, rtnjvv);
-    } else if (mjvv->jvv_dtype == JVV_DTYPE_INTERNAL_METHOD) {
-        jstat = jexp_internal_method_call(jx, mjvv->jvv_val.jvv_int_method, NULL, jvvargs, rtnjvv);
-    } else if (mjvv->jvv_dtype == JVV_DTYPE_FUNCTION) {
-        if (!jcx) jcx = jvar_get_head_jcontext(jx);
-        jstat = jexp_call_function(jx, pjtok, mjvv->jvv_val.jvv_val_function, NULL, jvvargs, jcx, rtnjvv);
-    } else if (mjvv->jvv_dtype == JVV_DTYPE_DYNAMIC) {
-        jstat = (mjvv->jvv_val.jvv_val_dynamic->jvvy_get_proc)(jx,
-                    mjvv->jvv_val.jvv_val_dynamic, NULL, &jvvfunc);
-        if (!jstat) {
-            //jstat = jexp_call_function(jx, pjtok, mjvv->jvv_val.jvv_val_function, NULL, jvvargs, jcx, rtnjvv);
-            jstat = jexp_method_call(jx, pjtok, jvvfunc, jvvparms, rtnjvv);
-        }
-    } else if (mjvv->jvv_dtype == JVV_DTYPE_LVAL) {
-        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INTERNAL_ERROR,
-            "Found lval for function or method.");
-    } else {
-        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_EXP_METHOD,
-            "Expecting function or method. Found: %s",
-                jvar_get_dtype_name(mjvv->jvv_dtype));
-    }
-#else
     switch (mjvv->jvv_dtype) {
         case JVV_DTYPE_FUNCVAR:
             jvvf = mjvv->jvv_val.jvv_val_funcvar.jvvfv_jvvf;
@@ -3485,7 +3460,6 @@ static int jexp_method_call(
                     jvar_get_dtype_name(mjvv->jvv_dtype));
             break;
     }
-#endif
 
     jvar_free_jvarvalue_data(jvvparms);
 
@@ -3660,6 +3634,65 @@ static int jexp_eval_new_internal_class(
     return (jstat);
 }
 /***************************************************************/
+static int jexp_eval_new_user_function(
+                    struct jrunexec * jx,
+                    struct jvarvalue_function * jvvf,
+                    struct jcontext * var_jcx,
+                    struct jtoken ** pjtok,
+                    struct jvarvalue * jvv)
+{
+/*
+** 09/13/2022
+*/
+    int jstat = 0;
+    struct jvarvalue jvvparms;
+    struct jvarvalue jvvnewval;
+    struct jvarvalue mjvv;
+    struct jvarvalue_pointer * jvvr;
+    struct jvarvalue_object * jvvb;
+
+    INIT_JVARVALUE(&jvvparms);
+    if (!jstat) jstat = jrun_next_token(jx, pjtok);
+    if (!jstat) {
+        if ((*pjtok)->jtok_kw == JSPU_OPEN_PAREN) {
+            jstat = jrun_next_token(jx, pjtok);
+            if (!jstat) {
+                jstat = jexp_eval(jx, pjtok, &jvvparms);
+                if (!jstat && (*pjtok)->jtok_kw == JSPU_CLOSE_PAREN) {
+                    jstat = jrun_next_token(jx, pjtok);
+                } else {
+                    jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_EXP_CLOSE_PAREN,
+                        "Expecting close parenthesis. Found: %s", (*pjtok)->jtok_text);
+                }
+            }
+        }
+    }
+
+    if (!jstat) {
+        jvvb = job_new_jvarvalue_object(jx);
+        //INCOBJREFS(jvvb);
+        mjvv.jvv_dtype = JVV_DTYPE_FUNCVAR;
+        mjvv.jvv_val.jvv_val_funcvar.jvvfv_jvvf     = jvvf;
+        mjvv.jvv_val.jvv_val_funcvar.jvvfv_var_jcx  = var_jcx;
+        mjvv.jvv_val.jvv_val_funcvar.jvvfv_this_obj = jvvb;
+        INCFUNCREFS(jvvf);
+
+        INIT_JVARVALUE(&jvvnewval);
+        jstat = jexp_method_call(jx, pjtok, &mjvv, &jvvparms, &jvvnewval);
+        if (!jstat) {
+            jvar_free_jvarvalue_data(&jvvnewval);
+            jvvr = jvar_new_jvarvalue_pointer();
+            COPY_JVARVALUE(&(jvvr->jvvr_jvv), &jvvnewval);
+            jvv->jvv_dtype = JVV_DTYPE_POINTER;
+            jvvr->jvvr_jvv.jvv_dtype = JVV_DTYPE_OBJECT;
+            jvvr->jvvr_jvv.jvv_val.jvv_val_object = jvvb;
+            jvv->jvv_val.jvv_pointer   = jvvr;
+        }
+    }
+
+    return (jstat);
+}
+/***************************************************************/
 static int jexp_eval_new(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok,
@@ -3683,6 +3716,9 @@ static int jexp_eval_new(
             switch (vjvv->jvv_dtype) {
                 case JVV_DTYPE_INTERNAL_CLASS:
                     jstat = jexp_eval_new_internal_class(jx, vjvv, pjtok, jvv);
+                    break;
+                case JVV_DTYPE_FUNCTION:
+                    jstat = jexp_eval_new_user_function(jx, vjvv->jvv_val.jvv_val_function, var_jcx, pjtok, jvv);
                     break;
                 default:
                     jstat = jrun_set_error(jx, errtyp_TypeError, JSERR_INVALID_CLASS,

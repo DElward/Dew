@@ -1855,6 +1855,20 @@ static int jrun_implicit_stmt(
     return (jstat);
 }
 /***************************************************************/
+static int jrun_exec_this_stmt(
+                    struct jrunexec * jx,
+                    struct jtoken ** pjtok)
+{
+/*
+** 09/15/2022
+*/
+    int jstat = 0;
+
+    jstat = jrun_implicit_stmt(jx, pjtok);
+
+    return (jstat);
+}
+/***************************************************************/
 /***************************************************************/
 struct jstmt_cmd_rec { /* jcr_ */
     int jcr_active_flags;
@@ -1917,7 +1931,7 @@ struct jstmt_cmd_rec jstmt_cmd_rec_list[] = {
 /* JSKW_SUPER             */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_SWITCH            */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_SYNCHRONIZED      */ { 0, NULL                          , 0, NULL                           },
-/* JSKW_THIS              */ { 0, NULL                          , 0, NULL                           },
+/* JSKW_THIS              */ { 2, jrun_exec_this_stmt           , 0, NULL                           },
 /* JSKW_THROW             */ { 3, jrun_exec_throw_stmt          , 1, jrun_inactive_throw            },
 /* JSKW_THROWS            */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_TRANSIENT         */ { 0, NULL                          , 0, NULL                           },

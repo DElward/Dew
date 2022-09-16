@@ -236,6 +236,7 @@ static struct jcontext * jrun_create_function_context(
 /***************************************************************/
 int jrun_push_jfuncstate(struct jrunexec * jx,
     struct jvarvalue_function * jvvf,
+    struct jvarvalue_object * this_obj,
     struct jcontext * outer_jcx)
 {
 /*
@@ -283,6 +284,7 @@ int jrun_push_jfuncstate(struct jrunexec * jx,
     jcx = jrun_create_function_context(jx, jvvf->jvvf_vars, outer_jcx);
     jx->jx_jfs[jx->jx_njfs]->jfs_jcx = jcx;        
     jx->jx_jfs[jx->jx_njfs]->jfs_prev_jcx = jvar_get_head_jcontext(jx);
+    jx->jx_jfs[jx->jx_njfs]->jfs_this_obj = this_obj;
     jcx->jcx_jvvf = jvvf;
     jvar_set_head_jcontext(jx, jcx);
     jrun_set_current_jxc(jx, &(jvvf->jvvf_begin_jxc));

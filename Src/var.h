@@ -184,5 +184,7 @@ int jrun_ensure_boolean(
     struct jvarvalue * jvv,
     int * boolval,
     int ensflags);
+struct jvarvalue_object * jvar_get_current_object(struct jrunexec * jx);
+void jvar_store_this(struct jrunexec * jx, struct jvarvalue * jvv);
 /***************************************************************/
 #endif /* VARH_INCLUDED */

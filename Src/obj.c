@@ -39,7 +39,7 @@ void jvar_inc_object_refs(struct jvarvalue_object * jvvb, int val)
 }
 #endif
 /***************************************************************/
-static struct jvarvalue_object * job_new_jvarvalue_object(struct jrunexec * jx)
+struct jvarvalue_object * job_new_jvarvalue_object(struct jrunexec * jx)
 {
 /*
 ** 10/12/2021

@@ -28,6 +28,7 @@
 #define JVV_INTERNAL_TYPE_CLASS_Number      "Number"
 #define JVV_INTERNAL_TYPE_CLASS_String      "String"
 #define JVV_INTERNAL_TYPE_CLASS_Array       "Array"
+#define JVV_INTERNAL_TYPE_CLASS_Object      "Object"
 #define JVV_INTERNAL_TYPE_CLASS_Dynamic     "@Dynamic"
 
 #define JVV_BRACKET_OPERATION               "[]"

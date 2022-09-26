@@ -61,7 +61,7 @@
 #define JSERR_EXP_N_ARGS                        (-9849)
 #define JSERR_CONVERT_TO_CHARS                  (-9850)
 #define JSERR_OPERATOR_REQUIRES_LVAL            (-9851)
-#define JSERR_OBJECT_MEMBER_NOT_FOUND           (-9852)
+#define JSERR__UNUSED_1                         (-9852)
 #define JSERR_OBJECT_POINTER                    (-9853)
 #define JSERR_NO_CLOSE_BRACE                    (-9854)
 #define JSERR_UNIMPLEMENTED                     (-9855)
@@ -69,6 +69,8 @@
 #define JSERR_INVALID_CLASS                     (-9857)
 #define JSERR_CONVERT_TO_NUM                    (-9858)
 #define JSERR_CONVERT_TO_BOOLEAN                (-9859)
+#define JSERR_INVALID_DOT                       (-9860)
+#define JSERR_EXP_COMMA_SEMICOLON               (-9861)
 
 #define JSERR_RUNTIME_STACK_OVERFLOW            (-7801)
 #define JSERR_RUNTIME_STACK_UNDERFLOW           (-7802)

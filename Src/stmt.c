@@ -682,8 +682,8 @@ static int jrun_exec_newvar_stmt(
             } else if ((*pjtok)->jtok_kw == JSPU_COMMA) {
                 jstat = jrun_next_token(jx, pjtok);
             } else {
-                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERROBJ_SCRIPT_SYNTAX_ERROR,
-                    "Unexpected token \'%s\'", (*pjtok)->jtok_text);
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_EXP_COMMA_SEMICOLON,
+                    "Expecting comma or semicolon. Found: \'%s\'", (*pjtok)->jtok_text);
             }
         }
     }
@@ -806,8 +806,8 @@ static int jrun_exec_var_stmt(
                 } else if ((*pjtok)->jtok_kw == JSPU_COMMA) {
                     jstat = jrun_next_token(jx, pjtok);
                 } else {
-                    jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERROBJ_SCRIPT_SYNTAX_ERROR,
-                        "Unexpected token \'%s\'", (*pjtok)->jtok_text);
+                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_EXP_COMMA_SEMICOLON,
+                    "Expecting comma or semicolon in var statement. Found: \'%s\'", (*pjtok)->jtok_text);
                 }
             }
         }
@@ -1607,7 +1607,7 @@ static int jrun_exec_else(
 
     if (!XSTAT_IS_COMPLETE(jx)) {                                                    
         jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERROBJ_SCRIPT_SYNTAX_ERROR,
-            "Unexpected token \'%s\'", (*pjtok)->jtok_text);
+            "Unexpected token in else statement. Found: \'%s\'", (*pjtok)->jtok_text);
     }
 
     return (jstat);

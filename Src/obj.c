@@ -488,17 +488,37 @@ int jpr_object_tostring(
     return (jstat);
 }
 /***************************************************************/
-#if FIX_220830
+int jvar_insert_new_object_member(struct jrunexec * jx,
+    const char * varname,
+    struct jcontext * jcx,
+    struct jvarvalue ** newjvv)
+{
+/*
+** 09/19/2022
+*/
+    int jstat = 0;
+    int vix;
+    struct jvarvalue * tgt_jvv;
+
+    tgt_jvv = NULL;
+    vix = jvar_insert_into_jvarrec(jcx->jcx_jvar, varname);
+    if (vix >= 0) tgt_jvv = jvar_get_jvv_with_expand(jx, jcx, vix);
+#if IS_DEBUG
+    if (!tgt_jvv) {
+        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INTERNAL_ERROR,
+            "Internal error: Cannot find new variable: %s", varname);
+        return (jstat);
+    }
+#endif
+    (*newjvv) = tgt_jvv;
+
+    return (jstat);
+}
+/***************************************************************/
 int jexp_binop_dot_object(struct jrunexec * jx,
     struct jvarvalue * jvvobject,
     struct jvarvalue * jvvparent,
     struct jvarvalue * jvvfield)
-#else
-int jexp_binop_dot_object(struct jrunexec * jx,
-    struct jvarvalue * jvvobject,
-    struct jvarvalue_object * jvvb,
-    struct jvarvalue * jvvfield)
-#endif
 {
 /*
 ** 03/03/2022
@@ -506,9 +526,7 @@ int jexp_binop_dot_object(struct jrunexec * jx,
     int jstat = 0;
     int * pvix;
     struct jvarvalue * jvvsrc;
-#if FIX_220830
     struct jvarvalue_object * jvvb = jvvparent->jvv_val.jvv_val_object;
-#endif
 
 #if IS_DEBUG
     /* jvv_dtype should be checked before getting here. */
@@ -521,28 +539,28 @@ int jexp_binop_dot_object(struct jrunexec * jx,
 
     pvix = jvar_find_in_jvarrec(jvvb->jvvb_vars, jvvfield->jvv_val.jvv_val_token.jvvt_token);
     if (!pvix) {
-        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_OBJECT_MEMBER_NOT_FOUND,
-            "Object member '%s' not found.", 
-            jvvfield->jvv_val.jvv_val_token.jvvt_token);
+        jstat = jvar_insert_new_object_member(jx, jvvfield->jvv_val.jvv_val_token.jvvt_token, jvvb->jvvb_jcx, &jvvsrc);
     } else {
         jvvsrc = jvar_get_jvv_from_vix(jx, jvvb->jvvb_jcx, *pvix);
-        if (!jvvsrc) {
+    }
+    
+    if (!jvvsrc) {
+        if (!jstat) {
             jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INTERNAL_ERROR,
                 "Object member '%s' is null.", 
                 jvvfield->jvv_val.jvv_val_token.jvvt_token);
-        } else {
-            INCOBJREFS(jvvb);
-            jvar_free_jvarvalue_data(jvvobject);
-            jvar_store_lval(jx, jvvobject, jvvsrc, NULL);
-            /* jexp_quick_print(jx, jvvobject, "Object dot "); */
-            if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
-#if FIX_220830
-                jvvobject->jvv_val.jvv_lval.jvvv_parent = jvar_new_jvarvalue();
-                jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_dtype = JVV_DTYPE_OBJECT;
-                jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_val.jvv_val_object = jvvb;
-#else
-                jvvobject->jvv_val.jvv_lval.jvvv_jvvb = jvvb;
-#endif
+        }
+    } else {
+        INCOBJREFS(jvvb);
+        /* jvar_free_jvarvalue_data(jvvobject);  -- 09/26/2022 -- Moved to jvar_store_lval() */
+        jvar_store_lval(jx, jvvobject, jvvsrc, NULL);
+        if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
+            jvvobject->jvv_val.jvv_lval.jvvv_parent = jvar_new_jvarvalue();
+            jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_dtype = JVV_DTYPE_OBJECT;
+            jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_val.jvv_val_object = jvvb;
+            if (jvvobject->jvv_val.jvv_lval.jvvv_lval->jvv_dtype == JVV_DTYPE_FUNCVAR) {
+                INCOBJREFS(jvvb);
+                jvvobject->jvv_val.jvv_lval.jvvv_lval->jvv_val.jvv_val_funcvar.jvvfv_this_obj = jvvb;
             }
         }
     }

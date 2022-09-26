@@ -8,7 +8,6 @@
 #define USE_JVARVALUE_IMETHVAR      1       /* 1 passes tests */
 #define PREP_INACTIVE_EXPRESSIONS   1       /* 1 passes tests */
 #define FIX_220812                  0
-#define FIX_220830                  1
 #define FIX_220901                  1
 
 typedef int32 JSINT;
@@ -203,11 +202,7 @@ struct jvarvalue_function {   /* jvvf_ */
 struct jvarvalue_lval {   /* jvvv_ */
     struct jvarvalue              * jvvv_lval;  /* Points to existing storage */
     struct jcontext               * jvvv_var_jcx;
-#if FIX_220830
     struct jvarvalue              * jvvv_parent;
-#else
-    struct jvarvalue_object       * jvvv_jvvb;
-#endif
 };
 
 struct jvarvalue_funcvar {   /* jvvfv_ */     /* Move into jvarvalue_objptr */
@@ -375,7 +370,7 @@ struct jfuncstate {   /* jfs_ */
     struct jvarvalue_function * jfs_jvvf;
     struct jcontext           * jfs_jcx;
     struct jcontext           * jfs_prev_jcx;
-    struct jvarvalue_object   * jfs_this_obj;
+    struct jvarvalue          * jfs_this_jvv;
 };
 
 struct jrunexec {   /* jx_ */
@@ -491,7 +486,7 @@ void jrun_get_current_jxc(struct jrunexec * jx, struct jxcursor * current_jxc);
 void jrun_set_current_jxc(struct jrunexec * jx, struct jxcursor * current_jxc);
 int jrun_push_jfuncstate(struct jrunexec * jx,
     struct jvarvalue_function * fjvv,
-    struct jvarvalue_object * this_obj,
+    struct jvarvalue * this_jvv,
     struct jcontext * outer_jcx);
 int jrun_pop_jfuncstate(struct jrunexec * jx);
 int jrun_push_xstat(struct jrunexec * jx, int xstat);

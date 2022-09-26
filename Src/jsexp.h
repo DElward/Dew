@@ -111,7 +111,7 @@ int jexp_call_function(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok,
                     struct jvarvalue_function * fjvv,
-                    struct jvarvalue_object * this_obj,
+                    struct jvarvalue * this_jvv,
                     struct jvarvalue * jvvparms,
                     struct jcontext * outer_jcx,
                     struct jvarvalue * rtnjvv);

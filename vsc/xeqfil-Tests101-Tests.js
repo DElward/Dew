@@ -763,6 +763,12 @@ if (obj101b_30b.co.ea[0] == "Dave") ngood = ngood + 1; else { console.log("Test 
 if (func_101_30b('f', obj101b_30b).ci == "Belmont") ngood = ngood + 1; else { console.log("Test 101_30f failed"); nerrs = nerrs + 1; }
 ss101_30 = func_101_30b('g', obj101b_30b);
 if (ss101_30.na == "Taurus") ngood = ngood + 1; else { console.log("Test 101_30g failed"); nerrs = nerrs + 1; }
+obj101_30.model = 'Eagle';
+if (obj101_30.model == "Eagle") ngood = ngood + 1; else { console.log("Test 101_30h failed"); nerrs = nerrs + 1; }
+obj101_30.make = { coname: "Taurus Software", cocity: "San Carlos" };
+if (obj101_30.make.coname == "Taurus Software") ngood = ngood + 1; else { console.log("Test 101_30i failed"); nerrs = nerrs + 1; }
+obj101_30.make = { street: "Quarry Road", county: "San Mateo" };
+if (obj101_30.make.street == "Quarry Road") ngood = ngood + 1; else { console.log("Test 101_30j failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 // Test 101_31 - 08/08/2022 - String interpolation tests
 ////////////////////////////////////////////////////////////////////////
@@ -872,6 +878,42 @@ v101_33 = Number.toString;
 if (typeof v101_33 == "function") ngood = ngood + 1; else { console.log("Test 101_32q failed"); nerrs = nerrs + 1; }
 v101_33 = Number("123");
 if (typeof v101_33 == "number") ngood = ngood + 1; else { console.log("Test 101_32r failed"); nerrs = nerrs + 1; }
+////////////////////////////////////////////////////////////////////////
+// Test 101_34 - 09/21/2022 - new function() tests
+////////////////////////////////////////////////////////////////////////
+function f101_34(make, model, year) {
+    this.make = make;
+    this.model = model;
+    this.year = year;
+    var make = "BMW";
+    
+    make = make + "Ford";
+    this.make = this.make + "Honda";
+    this.make2 = make;
+}
+
+const v101_34 = new f101_34('Eagle', 'Talon TSi', 1993);
+if (v101_34.make == "EagleHonda") ngood = ngood + 1; else { console.log("Test 101_34a failed"); nerrs = nerrs + 1; }
+if (v101_34.model == "Talon TSi") ngood = ngood + 1; else { console.log("Test 101_34b failed"); nerrs = nerrs + 1; }
+if (v101_34.year == 1993) ngood = ngood + 1; else { console.log("Test 101_34c failed"); nerrs = nerrs + 1; }
+if (v101_34.make2 == "BMWFord") ngood = ngood + 1; else { console.log("Test 101_34d failed"); nerrs = nerrs + 1; }
+////////////////////////////////////////////////////////////////////////
+// Test 101_35 - 09/22/2022 - new Object() tests
+////////////////////////////////////////////////////////////////////////
+var v101_35 = new Object();
+v101_35.chapter1 = new Object();
+v101_35.chapter1.title = "Introduction to JavaScript";
+v101_35.chapter1.pages = 19;
+v101_35.chapter2 = { title: "Lexical Structure", pages: 6 };
+if (v101_35.chapter1.title == "Introduction to JavaScript") ngood = ngood + 1; else { console.log("Test 101_35a failed"); nerrs = nerrs + 1; }
+if (v101_35.chapter2.title == "Lexical Structure") ngood = ngood + 1; else { console.log("Test 101_35b failed"); nerrs = nerrs + 1; }
+function f101_35_Rectangle(w, h) { this.width = w; this.height = h; }
+function f101_35_compute_area() { return this.width * this.height; }
+var wf101_35 = new f101_35_Rectangle(3, 4);
+wf101_35.area = f101_35_compute_area;
+wf101_35.area2 = function () { return this.width * this.height + 2; };
+if (wf101_35.area() == 12) ngood = ngood + 1; else { console.log("Test 101_35c failed"); nerrs = nerrs + 1; }
+if (wf101_35.area2() == 14) ngood = ngood + 1; else { console.log("Test 101_35d failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

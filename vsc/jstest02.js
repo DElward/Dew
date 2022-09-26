@@ -16,37 +16,16 @@
 //  var nerrs = 0;
 //  var printf = false;
 
-var ss = { firstName: "John", lastName: "Jones", age: 29 };
-ss.model = 'Eagle';
-console.log("ss=", ss); // Exp: ss= {firstName: 'John', lastName: 'Jones', age: 29, model: 'Eagle'}
-//  var tt = ss.make;
-//  console.log("tt=", tt);             // Exp: tt= undefined
-//  console.log("ss.year=", ss.year);   // Exp: ss.year= undefined
-
 ////////////////////////////////////////////////////////////////////////
-//  function Car(make, model, year) {
-//      console.log("Enter Car()");
-//      this.make = make;
-//      //  this.model = model;
-//      //  this.year = year;
-//      //  var make = "BMW";
-//      //  
-//      //  make = make + "Ford";
-//      //  this.make = this.make + "Honda";
-//      //  
-//      //  console.log("make=", make);             // Exp: make= BMWFord
-//      //  console.log("this.make=", this.make);   // Exp: this.make= EagleHonda
-//      //  console.log("make=", make, "model=", model, "year=", year);
-//  }
-//  
-//  const car1 = new Car('Eagle', 'Talon TSi', 1993);
-//  console.log("null=", null);
-//  //const car1 = new Car('Eagle', 'Talon TSi', 1993);
-//  //  console.log("car1.make=", car1.make);       // Exp: car1.make= EagleHonda
+function f101_35_Rectangle(w, h) { this.width = w; this.height = h; }
+function f101_35_compute_area() { return this.width * this.height; }
+var wf101_35 = new f101_35_Rectangle(3, 4);
+wf101_35.area = f101_35_compute_area;
+wf101_35.area2 = function () { return this.width * this.height + 2; };
 ////////////////////////////////////////////////////////////////////////
 //  if (nerrs == 0) console.log("All", ngood, "tests successful.");
 //  else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);
-////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
 console.log("--end jstest02.js tests--");
 //////// End tests ////////
 ////////////////////////////////////////////////////////////////////////

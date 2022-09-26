@@ -327,15 +327,9 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
 
         case JVV_DTYPE_LVAL :
             jvv->jvv_dtype = JVV_DTYPE_NONE;
-#if FIX_220830
             if (jvv->jvv_val.jvv_lval.jvvv_parent) {
                 jvar_free_jvarvalue(jvv->jvv_val.jvv_lval.jvvv_parent);
             }
-#else
-            if (jvv->jvv_val.jvv_lval.jvvv_jvvb) {
-                job_free_jvarvalue_object(jvv->jvv_val.jvv_lval.jvvv_jvvb);
-            }
-#endif
             break;
 
         case JVV_DTYPE_CHARS :
@@ -433,8 +427,10 @@ void jvar_free_jvarvalue(struct jvarvalue * jvv)
 /*
 ** 02/19/2021
 */
-    jvar_free_jvarvalue_data(jvv);
-    Free(jvv);
+    if (jvv) {
+        jvar_free_jvarvalue_data(jvv);
+        Free(jvv);
+    }
 }
 /***************************************************************/
 void jvar_store_null(struct jvarvalue * jvv)
@@ -523,15 +519,20 @@ void jvar_store_this(struct jrunexec * jx, struct jvarvalue * jvv)
 /*
 ** 09/15/2022
 */
-    struct jvarvalue_object * this_obj;
+    struct jvarvalue * this_jvv;
 
     jvar_free_jvarvalue_data(jvv);
 
-    this_obj = jvar_get_current_object(jx);
-    if (this_obj) {
-        jvv->jvv_dtype = JVV_DTYPE_OBJECT;
-        jvv->jvv_val.jvv_val_object = this_obj;
-        INCOBJREFS(this_obj);
+    this_jvv = jvar_get_current_object(jx);
+    if (this_jvv->jvv_dtype == JVV_DTYPE_OBJECT) {
+        if (this_jvv) {
+            jvv->jvv_dtype = JVV_DTYPE_OBJECT;
+            jvv->jvv_val.jvv_val_object = this_jvv->jvv_val.jvv_val_object;
+            INCOBJREFS(this_jvv->jvv_val.jvv_val_object);
+        } else {
+            jvv->jvv_dtype = JVV_DTYPE_NULL;
+            jvv->jvv_val.jvv_void = NULL;
+        }
     } else {
         jvv->jvv_dtype = JVV_DTYPE_NULL;
         jvv->jvv_val.jvv_void = NULL;
@@ -1447,18 +1448,18 @@ struct jfuncstate * jvar_get_current_jfuncstate(struct jrunexec * jx)
     return (jxfs);
 }
 /***************************************************************/
-struct jvarvalue_object * jvar_get_current_object(struct jrunexec * jx)
+struct jvarvalue * jvar_get_current_object(struct jrunexec * jx)
 {
 /*
 ** 09/13/2022
 */
-    struct jvarvalue_object * this_obj = NULL;
+    struct jvarvalue * this_jvv = NULL;
 
     if (jx->jx_njfs) {
-        this_obj = jx->jx_jfs[jx->jx_njfs - 1]->jfs_this_obj;
+        this_jvv = jx->jx_jfs[jx->jx_njfs - 1]->jfs_this_jvv;
     }
 
-    return (this_obj);
+    return (this_jvv);
 }
 /***************************************************************/
 struct jcontext * jvar_get_head_jcontext(struct jrunexec * jx)

@@ -21,6 +21,7 @@
 #include "var.h"
 #include "prep.h"
 #include "stmt.h"
+#include "obj.h"
 
 /***************************************************************/
 /* 02/03/2022                                                  */
@@ -236,7 +237,7 @@ static struct jcontext * jrun_create_function_context(
 /***************************************************************/
 int jrun_push_jfuncstate(struct jrunexec * jx,
     struct jvarvalue_function * jvvf,
-    struct jvarvalue_object * this_obj,
+    struct jvarvalue * this_jvv,
     struct jcontext * outer_jcx)
 {
 /*
@@ -284,7 +285,7 @@ int jrun_push_jfuncstate(struct jrunexec * jx,
     jcx = jrun_create_function_context(jx, jvvf->jvvf_vars, outer_jcx);
     jx->jx_jfs[jx->jx_njfs]->jfs_jcx = jcx;        
     jx->jx_jfs[jx->jx_njfs]->jfs_prev_jcx = jvar_get_head_jcontext(jx);
-    jx->jx_jfs[jx->jx_njfs]->jfs_this_obj = this_obj;
+    jx->jx_jfs[jx->jx_njfs]->jfs_this_jvv = this_jvv;
     jcx->jcx_jvvf = jvvf;
     jvar_set_head_jcontext(jx, jcx);
     jrun_set_current_jxc(jx, &(jvvf->jvvf_begin_jxc));
@@ -790,6 +791,7 @@ int jrun_get_stricter_mode(struct jrunexec * jx)
 /***************************************************************/
 static int jrun_call_global_function_by_name(struct jrunexec * jx,
     const char * funcname,
+    struct jvarvalue * this_jvv,
     struct jvarvalue * jvvparms)
 {
 /*
@@ -811,7 +813,7 @@ static int jrun_call_global_function_by_name(struct jrunexec * jx,
         jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_FUNCTION,
             "Cannot find function: %s", funcname);
     } else if (fjvv->jvv_dtype == JVV_DTYPE_FUNCTION) {
-        jstat = jexp_call_function(jx, &jtok, fjvv->jvv_val.jvv_val_function, NULL, jvvparms, global_jcx, &rtnjvv);
+        jstat = jexp_call_function(jx, &jtok, fjvv->jvv_val.jvv_val_function, this_jvv, jvvparms, global_jcx, &rtnjvv);
     } else {
         jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_FUNCTION,
             "Expecting a function. Found: %s", funcname);
@@ -845,6 +847,7 @@ static int jrun_exec_jrunexec(struct jrunexec * jx)
     struct jvarvalue_function * jvvf_main;
     struct jvarvalue fjvv_main;
     struct jvarvalue * jvvparms;
+    struct jvarvalue * main_obj_jvv;
 
     jstat = jprep_preprocess_main(jx, &jvvf_main);
     if (!jstat) {
@@ -858,7 +861,11 @@ static int jrun_exec_jrunexec(struct jrunexec * jx)
 
     if (!jstat) {
         jvvparms = jrun_get_main_parms(jx);
-        jstat = jrun_call_global_function_by_name(jx, jvvf_main->jvvf_func_name, jvvparms);
+        main_obj_jvv = jvar_new_jvarvalue();
+        main_obj_jvv->jvv_dtype = JVV_DTYPE_OBJECT;
+        main_obj_jvv->jvv_val.jvv_val_object = job_new_jvarvalue_object(jx);
+        jstat = jrun_call_global_function_by_name(jx, jvvf_main->jvvf_func_name, main_obj_jvv, jvvparms);
+        jvar_free_jvarvalue(main_obj_jvv);
         jvar_free_jvarvalue(jvvparms);
     }
 

@@ -33,11 +33,15 @@ struct jvv_iterator { /* jvvit_ */
 #define JVVAIT_FLAG_ADVANCE     256
 #define JVVAIT_FLAG_DONE        512
 
+#define JVV_PROTOTYPE_NAME                  "prototype"
+
 /***************************************************************/
 
 
 /***************************************************************/
 
+struct jprototype * jint_new_jprototype(struct jrunexec * jx);
+void jint_free_jprototype(struct jprototype * jpr);
 void jvar_init_jvarvalue(struct jvarvalue * jvv);
 struct jvarrec * jvar_new_jvarrec(void);
 struct jvarvalue * jvar_new_jvarvalue(void);

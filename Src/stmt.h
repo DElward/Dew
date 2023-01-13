@@ -14,6 +14,7 @@ typedef int (*JCR_COMMAND_FUNCTION)
 
 int jrun_exec_block(struct jrunexec * jx,
                     struct jtoken ** pjtok);
+int jrun_get_cmd_rec_list_size(struct jrunexec * jx);
 
 /***************************************************************/
 #endif /* STMTH_INCLUDED */

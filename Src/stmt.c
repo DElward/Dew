@@ -1923,6 +1923,7 @@ struct jstmt_cmd_rec jstmt_cmd_rec_list[] = {
 /* JSKW_PACKAGE           */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_PRIVATE           */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_PROTECTED         */ { 0, NULL                          , 0, NULL                           },
+/* JSKW_PROTOTYPE         */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_PUBLIC            */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_RETURN            */ { 3, jrun_exec_return_stmt         , 1, jrun_inactive_return           },
 /* JSKW_SET               */ { 0, NULL                          , 0, NULL                           },
@@ -1938,6 +1939,7 @@ struct jstmt_cmd_rec jstmt_cmd_rec_list[] = {
 /* JSKW_TRUE              */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_TRY               */ { 3, jrun_exec_try_stmt            , 1, jrun_inactive_try              },
 /* JSKW_TYPEOF            */ { 0, NULL                          , 0, NULL                           },
+/* JSKW_UNDEFINED         */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_VAR               */ { 3, jrun_exec_var_stmt            , 1, jexp_evaluate_inactive         },
 /* JSKW_VOID              */ { 0, NULL                          , 0, NULL                           },
 /* JSKW_VOLATILE          */ { 0, NULL                          , 0, NULL                           },
@@ -2003,12 +2005,31 @@ struct jstmt_cmd_rec jstmt_cmd_rec_list[] = {
 /* JSPU_BAR_BAR           */ { 0, NULL                          , 0, NULL                           },
 /* JSPU_CLOSE_BRACE       */ { 2, jrun_exec_close_brace         , 2, jrun_exec_close_brace          },
 /* JSPU_TILDE             */ { 0, NULL                          , 0, NULL                           },
-/* JSPU_ZZ_LAST           */ { 0, NULL                          , 0, NULL                           }
+/* JSPU_ZZ_LAST           */ { 32768, NULL                      , 0, NULL                           }
 };
 #define JCR_CMDFLAG_GET_TOKEN           1
 #define JCR_CMDFLAG_POP_COMPLETE        2
 #define JCR_CMDFLAG_UPDATE_XSTAT        4
 #define JCR_CMDFLAG_BAD_COMMAND         8
+#define JCR_CMDFLAG_END_OF_LIST         32768
+/***************************************************************/
+int jrun_get_cmd_rec_list_size(struct jrunexec * jx)
+{
+/*
+** 10/04/2022
+*/
+    int nc;
+    int ii;
+
+    nc = 0;
+    ii = 0;
+    while (!(jstmt_cmd_rec_list[ii].jcr_active_flags & JCR_CMDFLAG_END_OF_LIST)) {
+        nc++;
+        ii++;
+    }
+
+    return (nc);
+}
 /***************************************************************/
 #if (USE_COMMAND_TABLE & 2) != 0
 int jrun_exec_inactive_stmt(

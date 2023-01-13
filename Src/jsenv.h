@@ -54,6 +54,7 @@ struct jcontext { /* jcx_ */
 #define JCX_FLAG_CONST      4
 #define JCX_FLAG_OPERATION  8
 #define JCX_FLAG_FUNCTION   16
+#define JCX_FLAG_PROTOTYPE  32
 
 #define JERROR_OFFSET       4000
 #define MAXIMUM_JERRORS     100
@@ -112,6 +113,7 @@ enum e_jvv_type {
     JVV_DTYPE_OBJPTR            , /* 'R' */   /* 10/19/2021 */
     JVV_DTYPE_DYNAMIC           , /* 'S' */   /* 10/25/2021 */
     JVV_DTYPE_POINTER           , /* 'T' */   /* 08/25/2022 */
+    JVV_DTYPE_PROTOTYPE         , /* 'U' */   /* 10/03/2022 */
     JVV_ZZZZ
     /* Note: Add new types to jvar_get_dtype_name() */
     /* Also: jvar_store_jvarvalue() */
@@ -232,6 +234,10 @@ typedef int (*JVAR_DYNAMIC_SET_FUNCTION)
 
 typedef void (*JVAR_DYNAMIC_FREE_FUNCTION) (struct jvarvalue_dynamic * jvvy);
 
+struct jvarvalue_prototype {   /* jvpt_ */
+    struct jprototype *     jvpt_jpt;
+};
+
 struct jvarvalue_dynamic {   /* jvvy_ */
 #if IS_DEBUG
     char jvvy_sn[4];    /* 'Y' */
@@ -277,6 +283,7 @@ struct jvarvalue {   /* jvv_ */
         struct jvarvalue_objptr             jvv_objptr;        /* JVV_DTYPE_OBJPTR          */
         struct jvarvalue_dynamic          * jvv_val_dynamic;   /* JVV_DTYPE_DYNAMIC         */
         struct jvarvalue_pointer          * jvv_pointer;       /* JVV_DTYPE_POINTER         */
+        struct jvarvalue_prototype          jvv_prototype;     /* JVV_DTYPE_PROTOTYPE       */
     } jvv_val;
     int     jvv_flags; /* 02/28/2022 */
 };
@@ -302,6 +309,17 @@ struct jvarvalue_pointer {   /* jvvr_ */
 };
 #define INCPOINTERREFS(r) (((r)->jvvr_nRefs)++)
 #define DECPOINTERREFS(r) (((r)->jvvr_nRefs)--)
+
+struct jprototype {   /* jpt_ */
+#if IS_DEBUG
+    char jpt_sn[4]; /* 'P' */
+#endif
+    int                     jpt_nRefs;
+    struct jvarrec        * jpt_jvar;
+    struct jcontext       * jpt_jcx;
+};
+#define INCPROTOTYPEREFS(p) (((p)->jpt_nRefs)++)
+#define DECPROTOTYPEREFS(p) (((p)->jpt_nRefs)--)
 
 #define JXS_FLAGS_BEGIN_FUNC    1
 
@@ -336,6 +354,7 @@ struct jvarvalue_internal_class {   /* jvvi_ */
 #endif
     int                 jvvi_nRefs;
     struct jvarrec *    jvvi_jvar;
+    struct jprototype * jvvi_prototype;
     char             *  jvvi_class_name;
     struct jvarvalue    jvvi_superclass;
     JVAR_FREE_OBJECT    jvvi_destructor;

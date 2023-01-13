@@ -213,6 +213,8 @@ static void jvar_cat_chars(
 ** 03/15/2022
 **
 ** Reworked for JVV_DTYPE_POINTER points to jvv_chars1 on 09/06/2022
+**
+** See also: jint_concat_chars()
 */
     int tlen;
     struct jvarvalue_chars * jvvc;
@@ -1282,7 +1284,7 @@ static int jexp_compare_chars(
 
     if (jvvc1->jvvc_length < jvvc2->jvvc_length) {
         cmpval = strncmp(jvvc1->jvvc_val_chars, jvvc2->jvvc_val_chars, jvvc1->jvvc_length);
-        if (!cmpval && jvvc1->jvvc_length != jvvc2->jvvc_length) cmpval = 2;
+        if (!cmpval && jvvc1->jvvc_length != jvvc2->jvvc_length) cmpval = -1;
     } else {
         cmpval = strncmp(jvvc1->jvvc_val_chars, jvvc2->jvvc_val_chars, jvvc2->jvvc_length);
         if (!cmpval && jvvc1->jvvc_length != jvvc2->jvvc_length) cmpval = 1;
@@ -1312,6 +1314,17 @@ static int jexp_compare(struct jrunexec * jx,
     if (jstat) return (jstat);
 
     switch (jvv1->jvv_dtype) {
+        case JVV_DTYPE_NONE   :
+            if (jvv2->jvv_dtype == JVV_DTYPE_NONE) {
+                if (cmp_equality) {
+                    (*cmpval) = 0;
+                } else {
+                    (*cmpval) = 1;
+                }
+            } else {
+                (*cmpval) = 1;
+            }
+            break;
         case JVV_DTYPE_BOOL   :
             switch (jvv2->jvv_dtype) {
                 case JVV_DTYPE_BOOL   :
@@ -2373,6 +2386,10 @@ static int jexp_eval_primary(
                     jvar_store_null(jvv);
                     jstat = jrun_next_token(jx, pjtok);
                     break;
+                case JSKW_UNDEFINED:
+                    INIT_JVARVALUE(jvv);
+                    jstat = jrun_next_token(jx, pjtok);
+                    break;
                 case JSKW_FUNCTION:
                     jstat = jvar_parse_function_operand(jx, pjtok, jvv);
                     break;
@@ -2876,6 +2893,13 @@ static int jexp_binop_dot(struct jrunexec * jx,
             if (!mjvv) {
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNDEFINED_CLASS_MEMBER,
                     "Undefined class member: %s", ajvv2->jvv_val.jvv_val_token.jvvt_token);
+            } else if (mjvv->jvv_flags & JCX_FLAG_PROTOTYPE) {
+                DECICLASSHREFS(cjvv->jvv_val.jvv_jvvi);
+                jvar_free_jvarvalue_data(ajvv1);
+                ajvv1->jvv_dtype = JVV_DTYPE_PROTOTYPE;
+                ajvv1->jvv_val.jvv_prototype.jvpt_jpt = mjvv->jvv_val.jvv_prototype.jvpt_jpt;
+                ajvv1->jvv_flags = mjvv->jvv_flags;
+                jvar_free_jvarvalue(mjvv);
             } else {
                 DECICLASSHREFS(cjvv->jvv_val.jvv_jvvi);
 #if FIX_220901
@@ -2950,6 +2974,10 @@ static int jexp_binop_dot(struct jrunexec * jx,
         case JVV_DTYPE_OBJECT   :
             // old way - jstat = jexp_binop_dot_object(jx, cjvv, cjvv->jvv_val.jvv_val_object, ajvv2);
             jstat = jexp_binop_dot_object(jx, ajvv1, cjvv, ajvv2);
+            break;
+
+        case JVV_DTYPE_PROTOTYPE   :
+            jstat = jexp_binop_dot_prototype(jx, ajvv1, cjvv->jvv_val.jvv_prototype.jvpt_jpt, ajvv2);
             break;
 
         default:
@@ -3171,6 +3199,7 @@ static void jexp_print_stack(
         }
     }
 
+    printf("================================================================\n");
     printf("%s depth=%d precedence=%d flags=%s\n",
         msg, depth, bin_precedence, opflagstr);
 

@@ -27,6 +27,42 @@
 #define DEBUG_FREE_VARS 0
 
 /***************************************************************/
+struct jprototype * jint_new_jprototype(struct jrunexec * jx)
+{
+    struct jprototype * jpt;
+#if IS_DEBUG
+    static int next_jpt_sn = 0;
+#endif
+
+    jpt = New(struct jprototype, 1);
+#if IS_DEBUG
+    jpt->jpt_sn[0] = 'P';
+    jpt->jpt_sn[1] = (next_jpt_sn / 100) % 10 + '0';
+    jpt->jpt_sn[2] = (next_jpt_sn /  10) % 10 + '0';
+    jpt->jpt_sn[3] = (next_jpt_sn      ) % 10 + '0';
+    next_jpt_sn++;
+#endif
+    jpt->jpt_nRefs = 0;
+
+    jpt->jpt_jvar = jvar_new_jvarrec();
+    //INCVARRECREFS(jpt->jpt_jvar);
+    jpt->jpt_jcx = jvar_new_jcontext(jx, jpt->jpt_jvar, NULL);
+    INCPROTOTYPEREFS(jpt);
+
+    return (jpt);
+}
+/***************************************************************/
+void jint_free_jprototype(struct jprototype * jpt)
+{
+    DECPROTOTYPEREFS(jpt);
+
+    if (!jpt->jpt_nRefs) {
+        //jvar_free_jvarrec(jpt->jpt_jvar);
+        jvar_free_jcontext(jpt->jpt_jcx);
+        Free(jpt);
+    }
+}
+/***************************************************************/
 void jvar_init_jvarvalue(struct jvarvalue * jvv)
 {
 #if IS_DEBUG
@@ -218,6 +254,7 @@ void jvar_free_jvarvalue_internal_class(struct jvarvalue_internal_class * jvvi)
         }
         Free(jvvi->jvvi_class_name);
         /* jvar_free_jvarrec_consts(jvvi->jvvi_jvar); */
+        jint_free_jprototype(jvvi->jvvi_prototype);
         jvar_free_jvarrec(jvvi->jvvi_jvar);
         Free(jvvi);
     }
@@ -322,6 +359,7 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
         case JVV_DTYPE_BOOL  :
         case JVV_DTYPE_JSINT   :
         case JVV_DTYPE_JSFLOAT:
+        case JVV_DTYPE_PROTOTYPE:   /* 10/04/2022 */
             jvv->jvv_dtype = JVV_DTYPE_NONE;
             break;
 
@@ -905,9 +943,17 @@ struct jvarvalue * jvar_int_class_member(struct jrunexec * jx,
     if (cjvv) {
         if (cjvv->jvv_dtype == JVV_DTYPE_INTERNAL_CLASS) {
             jvvi = cjvv->jvv_val.jvv_jvvi;
-            pvix = jvar_find_in_jvarrec(jvvi->jvvi_jvar, mbrname);
-            if (pvix && (*pvix) >= 0 && (*pvix) < jvvi->jvvi_jvar->jvar_nconsts) {
-                jvv = &(jvvi->jvvi_jvar->jvar_aconsts[*pvix]);
+            if (!strcmp(mbrname, JVV_PROTOTYPE_NAME)) {
+                jvv = jvar_new_jvarvalue();
+                jvv->jvv_dtype = JVV_DTYPE_PROTOTYPE;
+                jvv->jvv_val.jvv_prototype.jvpt_jpt = jvvi->jvvi_prototype;
+                jvv->jvv_flags = JCX_FLAG_PROTOTYPE;
+                INCICLASSHREFS(jvvi);
+            } else {
+                pvix = jvar_find_in_jvarrec(jvvi->jvvi_jvar, mbrname);
+                if (pvix && (*pvix) >= 0 && (*pvix) < jvvi->jvvi_jvar->jvar_nconsts) {
+                    jvv = &(jvvi->jvvi_jvar->jvar_aconsts[*pvix]);
+                }
             }
         }
     }

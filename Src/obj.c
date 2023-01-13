@@ -568,3 +568,49 @@ int jexp_binop_dot_object(struct jrunexec * jx,
     return (jstat);
 }
 /***************************************************************/
+int jexp_binop_dot_prototype(struct jrunexec * jx,
+    struct jvarvalue * jvvobject,
+    struct jprototype * jpt,
+    struct jvarvalue * jvvfield)
+{
+/*
+** 10/04/2022
+*/
+    int jstat = 0;
+    int * pvix;
+    struct jvarvalue * jvvsrc;
+
+#if IS_DEBUG
+    /* jvv_dtype should be checked before getting here. */
+    if (jvvfield->jvv_dtype != JVV_DTYPE_TOKEN) {
+        jstat = jrun_set_error(jx, errtyp_InternalError, JSERR_INTERNAL_ERROR,
+            "Internal error: Expecting identifier after dot.");
+        return (jstat);
+    }
+#endif
+
+    pvix = jvar_find_in_jvarrec(jpt->jpt_jvar, jvvfield->jvv_val.jvv_val_token.jvvt_token);
+    if (!pvix) {
+        jstat = jvar_insert_new_object_member(jx, jvvfield->jvv_val.jvv_val_token.jvvt_token, jpt->jpt_jcx, &jvvsrc);
+    } else {
+        jvvsrc = jvar_get_jvv_from_vix(jx, jpt->jpt_jcx, *pvix);
+    }
+    
+    if (!jvvsrc) {
+        if (!jstat) {
+            jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INTERNAL_ERROR,
+                "Object member '%s' is null.", 
+                jvvfield->jvv_val.jvv_val_token.jvvt_token);
+        }
+    } else {
+        jvar_store_lval(jx, jvvobject, jvvsrc, NULL);
+        if (jvvobject->jvv_dtype == JVV_DTYPE_LVAL) {
+            jvvobject->jvv_val.jvv_lval.jvvv_parent = jvar_new_jvarvalue();
+            jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_dtype = JVV_DTYPE_PROTOTYPE;
+            jvvobject->jvv_val.jvv_lval.jvvv_parent->jvv_val.jvv_prototype.jvpt_jpt = jpt;
+        }
+    }
+
+    return (jstat);
+}
+/***************************************************************/

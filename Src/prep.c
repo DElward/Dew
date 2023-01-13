@@ -385,6 +385,12 @@ static int jprep_eval(
                 }
                 if (!jstat) {
                     xlx = GET_XLX(*pjtok);
+//                    if (((*pjtok)->jtok_typ == JSW_PU || (*pjtok)->jtok_typ == JSW_KW)) {
+//                        xlx = jx->jx_aop_xref[(*pjtok)->jtok_kw];
+//                    } else {
+//                        xlx = (-1);
+//                    }
+
                     while (!jstat && xlx >= 0 && (jxe[xlx].jxe_opflags & JXE_OPFLAG_POST_UNARY_OPERATION)) {
                         if ((*pjtok)->jtok_kw == JSPU_OPEN_BRACKET) {
                             jstat = jprep_eval_open_bracket(jx, pjtok, skip_flags);

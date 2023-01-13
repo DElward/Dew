@@ -1230,3 +1230,42 @@ function Car(make, model, year) {
 const car1 = new Car('Eagle', 'Talon TSi', 1993);
 console.log("car1.make=", car1.make);       // Exp: car1.make= EagleHonda
 ////////////////////////////////////////////////////////////////////////
+////    10/03/2022
+////////////////////////////////////////////////////////////////////////
+var ss = "Alpha";
+let tt = ss.concat("Beta", ";");
+String.prototype.concat = function (str, delim) {
+    var out;
+    if (delim == undefined) {
+        out = this + str;
+    } else {
+        out = this + delim;
+        out = out + str;
+    }
+    return (out);
+}
+let uu = tt.concat("Gamma", ",");
+console.log("ss=", ss, "tt=", tt, "uu=", uu);   // Exp: ss= Alpha tt= AlphaBeta; uu= AlphaBeta;,Gamma
+////////////////////////////////////////////////////////////////////////
+String.prototype.cat = 16;
+var tt = "Alpha";
+
+console.log("String.prototype.cat=", String.prototype.cat); // Exp: String.prototype.cat= 16
+console.log("String.cat=", String.cat);                     // Exp: String.cat= undefined
+console.log("tt.cat=", tt.cat);                             // Exp: tt.cat= 16
+console.log("'abc'.cat=", 'abc'.cat);                       // Exp: 'abc'.cat= 16
+////////////////////////////////////////////////////////////////////////
+//  var tt = "Alpha";
+//  console.log("tt.cat=", tt.cat);                             // Exp: tt.cat= 16
+//  console.log("'abc'.cat=", 'abc'.cat);                       // Exp: 'abc'.cat= 16
+////////////////////////////////
+//  String.prototype.cat = function (str, delim) {
+//      var out;
+//      out = this + delim;
+//      out = out + str;
+//  
+//      return (out);
+//  }
+//  var ss = "Alpha";
+//  let tt = ss.cat("Beta", ";");
+//  console.log("ss=", ss, "tt=", tt);  // Exp: ss= Alpha tt= Alpha;Beta

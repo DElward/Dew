@@ -70,6 +70,7 @@ static void jrun_init_internal_class(
     jvv->jvv_val.jvv_jvvi->jvvi_sn[3] = (next_jvvi_sn      ) % 10 + '0';
     next_jvvi_sn++;
 #endif
+    jvv->jvv_val.jvv_jvvi->jvvi_prototype = jint_new_jprototype(jx);
     jvv->jvv_val.jvv_jvvi->jvvi_jvar = jvar_new_jvarrec();
     INCVARRECREFS(jvv->jvv_val.jvv_jvvi->jvvi_jvar);
     jvv->jvv_val.jvv_jvvi->jvvi_nRefs = 0;
@@ -361,6 +362,24 @@ static int jrun_new_internal_class_method(
     return (jstat);
 }
 /***************************************************************/
+static int jrun_new_internal_prototype_method(
+    struct jrunexec * jx,
+    struct jvarvalue * jvv,
+    const char * method_name,
+    JVAR_INTERNAL_FUNCTION ifuncptr,
+    int jvvflags )
+
+{
+/*
+** 10/03/2022
+*/
+    int jstat = 0;
+
+    jstat = jrun_new_internal_class_method(jx, jvv, method_name, ifuncptr, jvvflags);
+
+    return (jstat);
+}
+/***************************************************************/
 int jrun_add_internal_class(
     struct jrunexec * jx,
     struct jvarvalue * jvv)
@@ -566,6 +585,70 @@ static int jint_String_length(
     return (jstat);
 }
 /***************************************************************/
+static void jint_concat_chars(
+    struct jvarvalue * jvvtgt,
+    struct jvarvalue_chars * jvv_chars1)
+{
+/*
+** 10/03/2022
+**
+** See also: jvar_cat_chars()
+*/
+    struct jvarvalue_chars * jvv_chars_tgt;
+    int tlen;
+
+    if (jvvtgt->jvv_dtype == JVV_DTYPE_CHARS) {
+        jvv_chars_tgt = jvvtgt->jvv_val.jvv_val_chars;
+        tlen = jvv_chars_tgt->jvvc_length + jvv_chars1->jvvc_length;
+        if (tlen + 1 >= jvv_chars_tgt->jvvc_size) {
+            jvv_chars_tgt->jvvc_size = tlen + JVARVALUE_CHARS_MIN;
+            jvv_chars_tgt->jvvc_val_chars =
+                Realloc(jvv_chars_tgt->jvvc_val_chars, char, jvv_chars_tgt->jvvc_size);
+        }
+
+        memcpy(jvv_chars_tgt->jvvc_val_chars + jvv_chars_tgt->jvvc_length,
+               jvv_chars1->jvvc_val_chars, jvv_chars1->jvvc_length);
+        jvv_chars_tgt->jvvc_length = tlen;
+        jvv_chars_tgt->jvvc_val_chars[tlen] = '\0';
+    }
+}
+/***************************************************************/
+static int jint_String_concat(
+        struct jrunexec  * jx,
+        const char       * func_name,
+        void             * this_ptr,
+        struct jvarvalue * jvvlargs,
+        struct jvarvalue * jvvrtn)
+{
+/*
+** 10/03/2022
+*/
+    int jstat = 0;
+    int ii;
+    struct jvarvalue_chars * jvvc = (struct jvarvalue_chars *)this_ptr;
+    struct jvarvalue jvvchars;
+
+    if (!this_ptr) {
+        jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_NULL_OBJECT,
+            "Null object passed to %s()", func_name);
+        return (jstat);
+    }
+    INIT_JVARVALUE(&(jvvchars));
+
+    jvar_store_chars_len(jvvrtn, jvvc->jvvc_val_chars, jvvc->jvvc_length);
+
+    for (ii = 0; !jstat && (ii < jvvlargs->jvv_val.jvv_jvvl->jvvl_nvals); ii++) {
+        jstat = jrun_ensure_chars(jx, &(jvvlargs->jvv_val.jvv_jvvl->jvvl_avals[ii]),
+                                    &jvvchars, ENSCHARS_FLAG_ERR);
+        if (!jstat && (jvvchars.jvv_dtype == JVV_DTYPE_CHARS)) {
+            jint_concat_chars(jvvrtn, jvvchars.jvv_val.jvv_val_chars);
+        }
+        jvar_free_jvarvalue_data(&jvvchars);
+    }
+
+    return (jstat);
+}
+/***************************************************************/
 static int jint_String_substring(
         struct jrunexec  * jx,
         const char       * func_name,
@@ -717,6 +800,53 @@ int jrun_load_type_String(struct jrunexec * jx)
 {
 /*
 ** 09/28/2021
+**  
+**  From:
+**  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
+**
+**  Static methods
+**  String.fromCharCode()               Returns a string created by using the specified sequence of Unicode values.
+**  String.fromCodePoint()              Returns a string created by using the specified sequence of code points.
+**  String.raw()                        Returns a string created from a raw template string.
+**
+**  Instance properties
+**  String.prototype.length             Reflects the length of the string. Read-only.
+**
+**  Instance methods
+**  String.prototype.at()               Returns the character at the specified index. Negative integers count back from end.
+**  String.prototype.charAt()           Returns the character at the specified index.
+**  String.prototype.charCodeAt()       Returns a number that is the UTF-16 code value at the given index.
+**  String.prototype.codePointAt()      Returns a nonnegative integer of the UTF-16 encoded code point starting at the specified pos.
+**  String.prototype.concat()           Combines the text of two (or more) strings and returns a new string.
+**  String.prototype.includes()         Determines whether the calling string contains searchString.
+**  String.prototype.endsWith()         Determines whether a string ends with the characters of the string searchString.
+**  String.prototype.indexOf()          Index within the calling String object of first occurrence of searchValue, or -1 if not found.
+**  String.prototype.lastIndexOf()      Index within the calling String object of last occurrence of searchValue, or -1 if not found.
+**  String.prototype.localeCompare()    Number indicating if the compareString comes before, after, or is equivalent in sort order.
+**  String.prototype.match()            Used to match regular expression against a string.
+**  String.prototype.matchAll()         Returns an iterator of all regexp's matches.
+**  String.prototype.normalize()        Returns the Unicode Normalization Form of the calling string value.
+**  String.prototype.padEnd()           Pads the current string from end with a given string and returns a new string of targetLength.
+**  String.prototype.padStart()         Pads the current string from start with a given string and returns a new string of targetLength.
+**  String.prototype.repeat()           Returns a string consisting of the elements of the object repeated count times.
+**  String.prototype.replace()          Replaces occurrences of searchFor with replaceWith. searchFor may be string, regexp, and replaceWith may be a string or function.
+**  String.prototype.replaceAll()       Replaces all occurrences of searchFor with replaceWith. searchFor may be a string, regexp, and replaceWith may be a string or function.
+**  String.prototype.search()           Search for a match between a regular expression regexp and the calling string.
+**  String.prototype.slice()            Extracts a section of a string and returns a new string.
+**  String.prototype.split()            Returns an array of strings populated by splitting the calling string at occurrences of the substring sep.
+**  String.prototype.startsWith()       Determines whether the calling string begins with the characters of string searchString.
+**  String.prototype.substring()        Returns a new string containing characters of the calling string from (or between) the specified index (or indices).
+**  String.prototype.toLocaleLowerCase()                        The characters within a string are converted to lowercase in the current locale.
+**  String.prototype.toLocaleUpperCase( [locale, ...locales])   The characters within a string are converted to uppercase in the current locale.
+**  String.prototype.toLowerCase()      Returns the calling string value converted to lowercase.
+**  String.prototype.toString()         Returns a string representing the specified object. Overrides the Object.prototype.toString() method.
+**  String.prototype.toUpperCase()      Returns the calling string value converted to uppercase.
+**  String.prototype.trim()             Trims whitespace from the beginning and end of the string.
+**  String.prototype.trimStart()        Trims whitespace from the beginning of the string.
+**  String.prototype.trimEnd()          Trims whitespace from the end of the string.
+**  String.prototype.valueOf()          Returns the primitive value of string. Overrides the Object.prototype.valueOf() method.
+**  String.prototype[@@iterator]()      Returns a new iterator that iterates over the code points of a String value.
+**  
 */
     int jstat = 0;
     struct jvarvalue jvv;
@@ -724,6 +854,7 @@ int jrun_load_type_String(struct jrunexec * jx)
     jrun_init_internal_class(jx, JVV_INTERNAL_TYPE_CLASS_String, NULL, NULL, &jvv);
 
     jstat = jrun_new_internal_class_method(jx, &jvv, "length"     , jint_String_length     , JCX_FLAG_PROPERTY);
+    if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, "concat"     , jint_String_concat     , JCX_FLAG_METHOD);
     if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, "substring"  , jint_String_substring  , JCX_FLAG_METHOD);
     if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD_toString, jint_String_toString, JCX_FLAG_METHOD);
     if (!jstat) jstat = jrun_new_internal_class_method(jx, &jvv, JVV_INTERNAL_METHOD__new, jint_String__new, JCX_FLAG_METHOD);
@@ -906,6 +1037,73 @@ int jrun_load_type_Array(struct jrunexec * jx)
 {
 /*
 ** 10/21/2021
+**  
+**  From:
+**  https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array
+**
+**  Static methods
+**  String.fromCharCode()               Returns a string created by using the specified sequence of Unicode values.
+**  String.fromCodePoint()              Returns a string created by using the specified sequence of code points.
+**  String.raw()                        Returns a string created from a raw template string.
+**
+**  Instance properties
+**  String.prototype.length             Reflects the length of the string. Read-only.
+**
+**  Constructor
+**  Array()                             Creates a new Array object.
+**
+**  Static properties
+**  get Array[@@species]                Returns the Array constructor.
+**  
+**  Static methods
+**  Array.from()                        Creates a new Array instance from an array-like object or iterable object.
+**  Array.isArray()                     Returns true if the argument is an array, or false otherwise.
+**  Array.of()                          Creates a new Array instance with a variable number of arguments, regardless of number or type of the arguments.
+**  
+**  Instance properties
+**  Array.prototype.length              Reflects the number of elements in an array.
+**  Array.prototype[@@unscopables]      Contains property names that were not included in the ECMAScript standard prior to the ES2015 version and that are ignored for with statement-binding purposes.
+**  
+**  Instance methods
+**  Array.prototype.at()                Returns the array item at the given index. Accepts negative integers, which count back from the last item.
+**  Array.prototype.concat()            Returns a new array that is the calling array joined with other array(s) and/or value(s).
+**  Array.prototype.copyWithin()        Copies a sequence of array elements within an array.
+**  Array.prototype.entries()           Returns a new array iterator object that contains the key/value pairs for each index in an array.
+**  Array.prototype.every()             Returns true if every element in the calling array satisfies the testing function.
+**  Array.prototype.fill()              Fills all the elements of an array from a start index to an end index with a static value.
+**  Array.prototype.filter()            Returns a new array containing all elements of the calling array for which the provided filtering function returns true.
+**  Array.prototype.find()              Returns the value of the first element in the array that satisfies the provided testing function, or undefined if no appropriate element is found.
+**  Array.prototype.findIndex()         Returns the index of the first element in the array that satisfies the provided testing function, or -1 if no appropriate element was found.
+**  Array.prototype.findLast()          Returns the value of the last element in the array that satisfies the provided testing function, or undefined if no appropriate element is found.
+**  Array.prototype.findLastIndex()     Returns the index of the last element in the array that satisfies the provided testing function, or -1 if no appropriate element was found.
+**  Array.prototype.flat()              Returns a new array with all sub-array elements concatenated into it recursively up to the specified depth.
+**  Array.prototype.flatMap()           Returns a new array formed by applying a given callback function to each element of the calling array, and then flattening the result by one level.
+**  Array.prototype.forEach()           Calls a function for each element in the calling array.
+**  Array.prototype.group() **          Groups the elements of an array into an object according to the strings returned by a test function.
+**  Array.prototype.groupToMap() **     Groups the elements of an array into a Map according to values returned by a test function.
+**  Array.prototype.includes()          Determines whether the calling array contains a value, returning true or false as appropriate.
+**  Array.prototype.indexOf()           Returns the first (least) index at which a given element can be found in the calling array.
+**  Array.prototype.join()              Joins all elements of an array into a string.
+**  Array.prototype.keys()              Returns a new array iterator that contains the keys for each index in the calling array.
+**  Array.prototype.lastIndexOf()       Returns the last (greatest) index at which a given element can be found in the calling array, or -1 if none is found.
+**  Array.prototype.map()               Returns a new array containing the results of invoking a function on every element in the calling array.
+**  Array.prototype.pop()               Removes the last element from an array and returns that element.
+**  Array.prototype.push()              Adds one or more elements to the end of an array, and returns the new length of the array.
+**  Array.prototype.reduce()            Executes a user-supplied "reducer" callback function on each element of the array (from left to right), to reduce it to a single value.
+**  Array.prototype.reduceRight()       Executes a user-supplied "reducer" callback function on each element of the array (from right to left), to reduce it to a single value.
+**  Array.prototype.reverse()           Reverses the order of the elements of an array in place. (First becomes the last, last becomes first.)
+**  Array.prototype.shift()             Removes the first element from an array and returns that element.
+**  Array.prototype.slice()             Extracts a section of the calling array and returns a new array.
+**  Array.prototype.some()              Returns true if at least one element in the calling array satisfies the provided testing function.
+**  Array.prototype.sort()              Sorts the elements of an array in place and returns the array.
+**  Array.prototype.splice()            Adds and/or removes elements from an array.
+**  Array.prototype.toLocaleString()    Returns a localized string representing the calling array and its elements. Overrides the Object.prototype.toLocaleString() method.
+**  Array.prototype.toString()          Returns a string representing the calling array and its elements. Overrides the Object.prototype.toString() method.
+**  Array.prototype.unshift()           Adds one or more elements to the front of an array, and returns the new length of the array.
+**  Array.prototype.values()            Returns a new array iterator object that contains the values for each index in the array.
+**  Array.prototype[@@iterator]()       An alias for the values() method by default.
+**  ** = Experimental
+**
 */
     int jstat = 0;
     struct jvarvalue jvv;

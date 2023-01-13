@@ -32,6 +32,9 @@ int jexp_binop_dot_object(struct jrunexec * jx,
     struct jvarvalue * jvvparent,
     struct jvarvalue * jvvfield);
 struct jvarvalue_object * job_new_jvarvalue_object(struct jrunexec * jx);
-
+int jexp_binop_dot_prototype(struct jrunexec * jx,
+    struct jvarvalue * jvvobject,
+    struct jprototype * jpt,
+    struct jvarvalue * jvvfield);
 /***************************************************************/
 #endif /* OBJH_INCLUDED */

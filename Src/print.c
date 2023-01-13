@@ -424,6 +424,10 @@ int jpr_jvarvalue_tostring(
             }
             break;
 
+        case JVV_DTYPE_PROTOTYPE:
+            if (jfmtflags & JFMT_FLAG_SHOW_TYPE) append_charval(prbuf, prlen, prmax, "PROTOTYPE: ");
+            break;
+
         default:
             append_printf(prbuf, prlen, prmax, "*Unknown tostring type=%s*", jvar_get_dtype_name(jvv->jvv_dtype));
             break;

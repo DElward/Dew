@@ -18,6 +18,9 @@
 #define JSKWI_VAR_OK    4   /* not reserved for a var name */
 #define JSKWI_NO_UPDATE 8
 
+/*
+****** WARNING: If this list is updated, jstmt_cmd_rec[] must be updated too.
+*/
 enum e_js_reserved_words {
     JSKW_NONE = 0            ,
     JSRW_ABSTRACT            ,
@@ -68,6 +71,7 @@ enum e_js_reserved_words {
     JSKW_PACKAGE             ,
     JSKW_PRIVATE             ,
     JSKW_PROTECTED           ,
+    JSKW_PROTOTYPE           ,  /* 10/04/2022 */
     JSKW_PUBLIC              ,
     JSKW_RETURN              ,
     JSKW_SET                 ,
@@ -83,12 +87,14 @@ enum e_js_reserved_words {
     JSKW_TRUE                ,
     JSKW_TRY                 ,
     JSKW_TYPEOF              ,
+    JSKW_UNDEFINED           ,  /* 10/04/2022 */
     JSKW_VAR                 ,
     JSKW_VOID                ,
     JSKW_VOLATILE            ,
     JSKW_WHILE               ,
     JSKW_WITH                ,
-    JSKW_YIELD               };
+    JSKW_YIELD               ,
+    JSKW_ZZ_LAST             };
 
 #define MAX_PUNCTUATOR_LENGTH  4
 
@@ -96,7 +102,7 @@ enum e_js_reserved_words {
 /* e.g. "<<=" must also have "<"                       */
 /*       Listing just "@@" without "@" would not work. */
 enum e_js_punctuator {
-    JSPU_NONE = JSKW_YIELD + 1,
+    JSPU_NONE = JSKW_ZZ_LAST,
     JSPU_BANG                 ,    /* "!"    */
     JSPU_BANG_EQ              ,    /* "!="   */
     JSPU_BANG_EQ_EQ           ,    /* "!=="  */

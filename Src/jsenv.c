@@ -186,6 +186,10 @@ int jenv_initialize(struct jsenv * jse)
 
     jstat = jenv_load_internal_classes(jse);
 
+    if (jrun_get_cmd_rec_list_size(jse->jse_jx) != JSPU_ZZ_LAST - 1) {
+        printf("******** WARNING: Command table is incorrect size ********\n\n");
+    }
+
     return (jstat);
 }
 /***************************************************************/

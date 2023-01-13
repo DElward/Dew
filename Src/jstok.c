@@ -23,6 +23,21 @@
 void jtok_free_jtokeninfo(struct jtokeninfo * jti);
 
 /***************************************************************/
+/*
+** 10/04/2022
+**  From: https://tc39.es/ecma262/#sec-keywords-and-reserved-words
+**
+**  await break case catch class const continue debugger default delete
+**  do else enum export extends false finally for function if import in 
+**  instanceof new null return super switch this throw true try typeof 
+**  var void while with yield
+**
+**  Future reserved words in strict mode
+**  implements, interface, package, private, protected, public
+**
+**  Not keywords, but subject to some restrictions in strict mode
+**  arguments eval
+*/
 struct js_reserved_words {
     char * jrw_name;
     short  jrw_rw;
@@ -78,6 +93,7 @@ struct js_reserved_words {
     { "package"       , JSKW_PACKAGE         , JSW_KW  , JSKWI_KEYWORD   },
     { "private"       , JSKW_PRIVATE         , JSW_KW  , JSKWI_KEYWORD   },
     { "protected"     , JSKW_PROTECTED       , JSW_KW  , JSKWI_KEYWORD   },
+    { "prototype"     , JSKW_PROTOTYPE       , JSW_KW  , JSKWI_KEYWORD | JSKWI_VAR_OK }, /* 10/04/2022 */
     { "public"        , JSKW_PUBLIC          , JSW_KW  , JSKWI_KEYWORD   },
     { "return"        , JSKW_RETURN          , JSW_KW  , JSKWI_RW        },
     { "set"           , JSKW_SET             , JSW_KW  , JSKWI_KEYWORD | JSKWI_VAR_OK },
@@ -93,6 +109,7 @@ struct js_reserved_words {
     { "true"          , JSKW_TRUE            , JSW_KW  , JSKWI_RW        },
     { "try"           , JSKW_TRY             , JSW_KW  , JSKWI_RW        },
     { "typeof"        , JSKW_TYPEOF          , JSW_KW  , JSKWI_RW        },
+    { "undefined"     , JSKW_UNDEFINED       , JSW_KW  , JSKWI_KEYWORD | JSKWI_VAR_OK }, /* 10/04/2022 */
     { "var"           , JSKW_VAR             , JSW_KW  , JSKWI_RW        },
     { "void"          , JSKW_VOID            , JSW_KW  , JSKWI_RW        },
     { "volatile"      , JSKW_VOLATILE        , JSW_KW  , JSKWI_KEYWORD   },

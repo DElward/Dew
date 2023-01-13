@@ -907,13 +907,19 @@ v101_35.chapter1.pages = 19;
 v101_35.chapter2 = { title: "Lexical Structure", pages: 6 };
 if (v101_35.chapter1.title == "Introduction to JavaScript") ngood = ngood + 1; else { console.log("Test 101_35a failed"); nerrs = nerrs + 1; }
 if (v101_35.chapter2.title == "Lexical Structure") ngood = ngood + 1; else { console.log("Test 101_35b failed"); nerrs = nerrs + 1; }
-function f101_35_Rectangle(w, h) { this.width = w; this.height = h; }
+function f101_35_Rectangle(w, h) {
+    function f101_35_compute_area3() { return this.width * this.height + 3; };
+    this.width = w;
+    this.height = h;
+    this.area3 = f101_35_compute_area3;
+}
 function f101_35_compute_area() { return this.width * this.height; }
 var wf101_35 = new f101_35_Rectangle(3, 4);
 wf101_35.area = f101_35_compute_area;
 wf101_35.area2 = function () { return this.width * this.height + 2; };
 if (wf101_35.area() == 12) ngood = ngood + 1; else { console.log("Test 101_35c failed"); nerrs = nerrs + 1; }
 if (wf101_35.area2() == 14) ngood = ngood + 1; else { console.log("Test 101_35d failed"); nerrs = nerrs + 1; }
+if (wf101_35.area3() == 15) ngood = ngood + 1; else { console.log("Test 101_35e failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

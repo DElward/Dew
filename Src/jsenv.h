@@ -4,11 +4,7 @@
 /* jsenv.h                                                     */
 /***************************************************************/
 
-#define USE_JVV_CHARS_POINTER       1       /* 1 passes tests */
-#define USE_JVARVALUE_IMETHVAR      1       /* 1 passes tests */
-#define PREP_INACTIVE_EXPRESSIONS   1       /* 1 passes tests */
-#define FIX_220812                  0
-#define FIX_220901                  1
+#define ALLOW_INT_CLASS_VARS    0   /* 01/17/2023 */
 
 typedef int32 JSINT;
 typedef int32 JSBOOL;
@@ -16,7 +12,6 @@ typedef double JSFLOAT;
 /***************************************************************/
 
 #define DEBUG_FUNCTION_CALLS    0
-#define DEBUG_OLD_ASSIGN        0       /* Delete this */
 
 #define JENFLAG_NODEJS          1
 #define JENFLAG_DEBUGFEATURES   4
@@ -215,9 +210,7 @@ struct jvarvalue_funcvar {   /* jvvfv_ */     /* Move into jvarvalue_objptr */
 struct jvarvalue_imethvar {   /* jvvimv_ */     /* Move into jvarvalue_objptr */
     struct jvarvalue_int_method   * jvvimv_jvvim;
     void                          * jvvimv_this_ptr;
-#if USE_JVARVALUE_IMETHVAR
     struct jvarvalue              * jvvimv_this_jvv;
-#endif
 };
 
 typedef int (*JVAR_DYNAMIC_GET_FUNCTION)
@@ -264,11 +257,7 @@ struct jvarvalue {   /* jvv_ */
         JSFLOAT                             jvv_val_jsfloat;   /* JVV_DTYPE_JSFLOAT         */
         void                              * jvv_void;          /* void*                     */
         struct jvarvalue_lval               jvv_lval;          /* JVV_DTYPE_LVAL            */
-#if USE_JVV_CHARS_POINTER
         struct jvarvalue_chars            * jvv_val_chars;     /* JVV_DTYPE_CHARS           */
-#else
-        struct jvarvalue_chars              jvv_val_chars;     /* JVV_DTYPE_CHARS           */
-#endif
         struct jvarvalue_number             jvv_val_number;    /* JVV_DTYPE_NUMBER          */
         struct jvarvalue_internal_class   * jvv_jvvi;          /* JVV_DTYPE_INTERNAL_CLASS  */
         struct jvarvalue_int_object       * jvv_jvvo;          /* JVV_DTYPE_INTERNAL_OBJECT */
@@ -354,6 +343,9 @@ struct jvarvalue_internal_class {   /* jvvi_ */
 #endif
     int                 jvvi_nRefs;
     struct jvarrec *    jvvi_jvar;
+#if ALLOW_INT_CLASS_VARS
+    struct jcontext   * jvvi_jcx;   /* 01/17/2023 */
+#endif
     struct jprototype * jvvi_prototype;
     char             *  jvvi_class_name;
     struct jvarvalue    jvvi_superclass;

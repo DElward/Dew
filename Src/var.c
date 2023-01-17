@@ -316,12 +316,9 @@ static void jvvl_free_jvarvalue_imethvar_data(struct jvarvalue_imethvar * jvvimv
 ** 03/18/2022
 */
     jvar_free_jvarvalue_internal_method(jvvimv->jvvimv_jvvim);
-#if USE_JVARVALUE_IMETHVAR
     if (jvvimv->jvvimv_this_jvv) jvar_free_jvarvalue(jvvimv->jvvimv_this_jvv);
-#endif
 }
 /***************************************************************/
-#if USE_JVV_CHARS_POINTER
 struct jvarvalue_chars * jvar_new_jvarvalue_chars()
 {
 /*
@@ -345,7 +342,6 @@ void jvar_free_jvarvalue_chars(struct jvarvalue_chars * jvv_chars)
     Free(jvv_chars->jvvc_val_chars);
     Free(jvv_chars);
 }
-#endif
 /***************************************************************/
 void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
 {
@@ -371,11 +367,7 @@ void jvar_free_jvarvalue_data(struct jvarvalue * jvv)
             break;
 
         case JVV_DTYPE_CHARS :
-#if USE_JVV_CHARS_POINTER
             jvar_free_jvarvalue_chars(jvv->jvv_val.jvv_val_chars);
-#else
-            Free(jvv->jvv_val.jvv_val_chars.jvvc_val_chars);
-#endif
             jvv->jvv_dtype = JVV_DTYPE_NONE;
             break;
 
@@ -627,15 +619,9 @@ int jvar_store_jvarvalue(
             jvar_store_jsfloat(jvvtgt, jvvsrc->jvv_val.jvv_val_jsfloat);
             break;
         case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
             jvar_store_chars_len(jvvtgt,
                 jvvsrc->jvv_val.jvv_val_chars->jvvc_val_chars,
                 jvvsrc->jvv_val.jvv_val_chars->jvvc_length);
-#else
-            jvar_store_chars_len(jvvtgt,
-                jvvsrc->jvv_val.jvv_val_chars.jvvc_val_chars,
-                jvvsrc->jvv_val.jvv_val_chars.jvvc_length);
-#endif
             break;
         case JVV_DTYPE_INTERNAL_METHOD   :
             jvvtgt->jvv_dtype = jvvsrc->jvv_dtype;
@@ -677,9 +663,6 @@ int jvar_store_jvarvalue(
 
             jvvtgt->jvv_dtype = JVV_DTYPE_IMETHVAR;
             jvvtgt->jvv_val.jvv_val_imethvar.jvvimv_jvvim = jvvsrc->jvv_val.jvv_val_imethvar.jvvimv_jvvim;
-#if USE_JVARVALUE_IMETHVAR
-            jvvtgt->jvv_val.jvv_val_imethvar.jvvimv_this_jvv = jvvsrc->jvv_val.jvv_val_imethvar.jvvimv_this_jvv;
-#endif
             jvvtgt->jvv_val.jvv_val_imethvar.jvvimv_this_ptr = jvvsrc->jvv_val.jvv_val_imethvar.jvvimv_this_ptr;
             if (jvvsrc->jvv_val.jvv_val_imethvar.jvvimv_jvvim) {
                 INCIMETHREFS(jvvsrc->jvv_val.jvv_val_imethvar.jvvimv_jvvim);
@@ -960,72 +943,6 @@ struct jvarvalue * jvar_int_class_member(struct jrunexec * jx,
 
     return (jvv);
 }
-/***************************************************************/
-#ifdef OLD_WAY
-struct jvarvalue * xxxjvar_find_global_variable(struct jrunexec * jx, const char * varname)
-{
-/*
-**
-*/
-    struct jvarvalue ** pjvv;
-    struct jvarvalue *  jvv;
-    struct jvarrec   *  jvar;
-    int vnlen;
-
-    jvv = NULL;
-    vnlen = IStrlen(varname) + 1;
-
-    /* search global variables */
-    jvar = jx->jx_globals;
-    while (!jvv && jvar) {
-        pjvv = (struct jvarvalue **)dbtree_find(
-            jvar->jvar_jvarvalue_dbt, varname, vnlen);
-        if (pjvv) {
-            jvv = (*pjvv);
-        } else {
-            jvar = jvar->jvar_prev;
-        }
-    }
-
-    return (jvv);
-}
-/***************************************************************/
-int jvar_find_global_varid(struct jrunexec * jx, const char * varname)
-{
-/*
-** 03/02/2021
-*/
-    int vix;
-
-    vix = VINVALID;
-
-    return (vix);
-}
-/***************************************************************/
-int jvar_find_varid(struct jrunexec * jx, const char * varname)
-{
-/*
-** 03/02/2021
-*/
-    int varid;
-
-    varid = VINVALID;
-
-    return (varid);
-}
-#endif
-// /***************************************************************/
-// struct jvarvalue * jvar_get_variable_from_varid(struct jrunexec * jx, int varid)
-// {
-// /*
-// ** 03/02/2021
-// */
-//     struct jvarvalue *  jvv;
-// 
-//     jvv = NULL;
-// 
-//     return (jvv);
-// }
 /***************************************************************/
 #if DEBUG_FREE_VARS
 char * jvar_get_varname_from_vix(struct jvarrec * jvar, int vix)
@@ -1460,26 +1377,6 @@ struct jvarvalue * jvar_find_local_variable(
     return (jvv);
 }
 /***************************************************************/
-#ifdef OLD_WAY
-struct jcontext * jvar_get_current_jcontext(struct jrunexec * jx)
-{
-/*
-** 03/04/2021
-*/
-    struct jfuncstate * jxfs;
-    struct jcontext * jcx;
-
-    if (jx->jx_njfs) {
-        jxfs = jx->jx_jfs[jx->jx_njfs - 1];
-        jcx = jxfs->jfs_jcx;
-    } else {
-        jcx = jvar_get_global_jcontext(jx);
-    }
-
-    return (jcx);
-}
-#endif
-/***************************************************************/
 struct jfuncstate * jvar_get_current_jfuncstate(struct jrunexec * jx)
 {
 /*
@@ -1653,23 +1550,13 @@ int jrun_ensure_number(
             break;
 
         case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
             cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars->jvvc_val_chars, &intnum, &dblnum);
-#else
-            cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars.jvvc_val_chars, &intnum, &dblnum);
-#endif
             if (cstat == 1) (*fltval) = (JSFLOAT)intnum;
             else if (cstat == 2) (*fltval) = dblnum;
             else if (ensflags & ENSURE_FLAG_ERROR) {
-#if USE_JVV_CHARS_POINTER
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_NUM,
                     "Expecting number. Found string: %s",        
                     jvv->jvv_val.jvv_val_chars->jvvc_val_chars);
-#else
-                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_NUM,
-                    "Expecting integer. Found string: %s",        
-                    jvv->jvv_val.jvv_val_chars.jvvc_val_chars);
-#endif
             }
             break;
 
@@ -1723,95 +1610,6 @@ int jrun_ensure_number(
     return (jstat);
 }
 /***************************************************************/
-#ifdef OLD_WAY
-int xxxjrun_ensure_int(
-    struct jrunexec * jx,
-    struct jvarvalue * jvv,
-    JSINT *intval,
-    int ensflags)
-{
-/*
-** 10/07/2021
-*/
-    int jstat = 0;
-    int cstat;
-    int intnum;
-    double dblnum;
-    struct jvarvalue * rjvv;
-
-    (*intval) = 0;
-
-    switch (jvv->jvv_dtype) {
-        
-        case JVV_DTYPE_BOOL   :
-            (*intval) = jvv->jvv_val.jvv_val_bool?1:0;
-            break;
-
-        case JVV_DTYPE_JSINT   :
-            (*intval) = jvv->jvv_val.jvv_val_jsint;
-            break;
-
-        case JVV_DTYPE_JSFLOAT   :
-            (*intval) = (int)floor(jvv->jvv_val.jvv_val_jsfloat);
-            break;
-
-        case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
-            cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars->jvvc_val_chars, &intnum, &dblnum);
-#else
-            cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars.jvvc_val_chars, &intnum, &dblnum);
-#endif
-            if (cstat == 1) (*intval) = intnum;
-            else if (cstat == 2) (*intval) = (int)floor(dblnum);
-            else if (ensflags & ENSURE_FLAG_ERROR) {
-#if USE_JVV_CHARS_POINTER
-                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_INT,
-                    "Expecting integer. Found string: %s",        
-                    jvv->jvv_val.jvv_val_chars->jvvc_val_chars);
-#else
-                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_INT,
-                    "Expecting integer. Found string: %s",        
-                    jvv->jvv_val.jvv_val_chars.jvvc_val_chars);
-#endif
-            }
-            break;
-
-        case JVV_DTYPE_LVAL:
-            jstat = jrun_ensure_int(jx, jvv->jvv_val.jvv_lval.jvvv_lval, intval, ensflags);
-            break;
-
-        case JVV_DTYPE_DYNAMIC: /* 02/21/2022 */
-            jstat = (jvv->jvv_val.jvv_val_dynamic->jvvy_get_proc)(jx,
-                jvv->jvv_val.jvv_val_dynamic,
-                NULL,
-                &rjvv);
-            if (!jstat) {
-                jstat = jrun_ensure_int(jx, rjvv, intval, ensflags);
-            }
-            break;
-
-        case JVV_DTYPE_NONE   :
-        case JVV_DTYPE_INTERNAL_CLASS:
-        case JVV_DTYPE_INTERNAL_METHOD:
-        case JVV_DTYPE_INTERNAL_OBJECT:
-        case JVV_DTYPE_VALLIST:
-        case JVV_DTYPE_TOKEN:
-        case JVV_DTYPE_FUNCTION:
-        case JVV_DTYPE_FUNCVAR   :
-        case JVV_DTYPE_ARRAY:
-        default:
-            if (ensflags & ENSURE_FLAG_ERROR) {
-                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_CONVERT_TO_INT,
-                    "Expecting integer. Found type: %s",        
-                    jvar_get_dtype_name(jvv->jvv_dtype));
-            }
-            break;
-    }
-
-    return (jstat);
-}
-/***************************************************************/
-#else
 int jrun_ensure_int(
     struct jrunexec * jx,
     struct jvarvalue * jvv,
@@ -1831,7 +1629,6 @@ int jrun_ensure_int(
 
     return (jstat);
 }
-#endif
 /***************************************************************/
 int jrun_ensure_boolean(
     struct jrunexec * jx,
@@ -1940,15 +1737,9 @@ int jrun_ensure_chars(
             break;
 
         case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
             jvar_store_chars_len(jvvchars,
                 jvv->jvv_val.jvv_val_chars->jvvc_val_chars,
                 jvv->jvv_val.jvv_val_chars->jvvc_length);
-#else
-            jvar_store_chars_len(jvvchars,
-                jvv->jvv_val.jvv_val_chars.jvvc_val_chars,
-                jvv->jvv_val.jvv_val_chars.jvvc_length);
-#endif
             break;
 
         case JVV_DTYPE_LVAL:

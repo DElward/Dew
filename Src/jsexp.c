@@ -66,7 +66,6 @@ static int jvar_chars_to_number(struct jvarvalue * jvvtgt, const char * jchars)
     return (cstat);
 }
 /***************************************************************/
-#if USE_JVV_CHARS_POINTER
 void jvar_store_chars_len(
     struct jvarvalue * jvvtgt,
     const char * jchars,
@@ -93,36 +92,6 @@ void jvar_store_chars_len(
     jvvtgt->jvv_val.jvv_val_chars->jvvc_val_chars[jcharslen] = '\0';
     jvvtgt->jvv_val.jvv_val_chars->jvvc_length = jcharslen;
 }
-#else
-void jvar_store_chars_len(
-    struct jvarvalue * jvvtgt,
-    const char * jchars,
-    int jcharslen,
-    int jcharsflags)
-{
-/*
-**
-*/
-    if (jvvtgt->jvv_dtype != JVV_DTYPE_CHARS) {
-        jvar_free_jvarvalue_data(jvvtgt);
-        jvvtgt->jvv_dtype = JVV_DTYPE_CHARS;
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_size = jcharslen + JVARVALUE_CHARS_MIN;
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars =
-            New(char, jvvtgt->jvv_val.jvv_val_chars.jvvc_size);
-    } else if (jcharslen + 1 >= jvvtgt->jvv_val.jvv_val_chars.jvvc_size) {
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_size = jcharslen + JVARVALUE_CHARS_MIN;
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars =
-                Realloc(jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars, char,\
-                 jvvtgt->jvv_val.jvv_val_chars.jvvc_size);
-    }
-
-    memcpy(jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars, jchars, jcharslen);
-    jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars[jcharslen] = '\0';
-    jvvtgt->jvv_val.jvv_val_chars.jvvc_length = jcharslen;
-    jvvtgt->jvv_val.jvv_val_chars.jvvc_length = jcharslen;
-    jvvtgt->jvv_val.jvv_val_chars.jvvc_flags  = jcharsflags;
-}
-#endif
 /***************************************************************/
 int jvar_store_chars_template(
     struct jrunexec * jx,
@@ -203,7 +172,6 @@ static void jvar_store_chars(
 }
 #endif
 /***************************************************************/
-#if USE_JVV_CHARS_POINTER
 static void jvar_cat_chars(
     struct jvarvalue * jvvtgt,
     struct jvarvalue_chars * jvv_chars1,
@@ -247,39 +215,6 @@ static void jvar_cat_chars(
         jvvtgt->jvv_val.jvv_val_chars = jvvc;
     }
 }
-#else
-static void jvar_cat_chars(
-    struct jvarvalue * jvvtgt,
-    struct jvarvalue_chars * jvv_chars1,
-    struct jvarvalue_chars * jvv_chars2)
-{
-/*
-**
-*/
-    int tlen;
-
-    tlen = jvv_chars1->jvvc_length + jvv_chars2->jvvc_length;
-    if (jvvtgt->jvv_dtype != JVV_DTYPE_CHARS) {
-        jvar_free_jvarvalue_data(jvvtgt);
-        jvvtgt->jvv_dtype = JVV_DTYPE_CHARS;
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_size = tlen + JVARVALUE_CHARS_MIN;
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars =
-            New(char, jvvtgt->jvv_val.jvv_val_chars.jvvc_size);
-    } else if (tlen + 1 >= jvvtgt->jvv_val.jvv_val_chars.jvvc_size) {
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_size = tlen + JVARVALUE_CHARS_MIN;
-        jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars =
-            Realloc(jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars, char, \
-                jvvtgt->jvv_val.jvv_val_chars.jvvc_size);
-    }
-
-    memcpy(jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars,
-           jvv_chars1->jvvc_val_chars, jvv_chars1->jvvc_length);
-    memcpy(jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars + jvv_chars1->jvvc_length,
-           jvv_chars2->jvvc_val_chars, jvv_chars2->jvvc_length);
-    jvvtgt->jvv_val.jvv_val_chars.jvvc_val_chars[tlen] = '\0';
-    jvvtgt->jvv_val.jvv_val_chars.jvvc_length = tlen;
-}
-#endif
 /***************************************************************/
 static int jvarvalue_to_chars(
     struct jrunexec * jx,
@@ -708,15 +643,9 @@ struct jvarvalue {
                     INIT_JVARVALUE(&(jvvchars));
                     jstat = jvarvalue_to_chars(jx, &jvvchars, jvv1);
                     if (!jstat) {
-#if USE_JVV_CHARS_POINTER
                         jvar_cat_chars(ajvv1,
                             jvvchars.jvv_val.jvv_val_chars,
                             jvv2->jvv_val.jvv_val_chars);
-#else
-                        jvar_cat_chars(ajvv1,
-                            &(jvvchars.jvv_val.jvv_val_chars),
-                            &(jvv2->jvv_val.jvv_val_chars));
-#endif
                         jvar_free_jvarvalue_data(&jvvchars);
                     }
                     break;
@@ -743,15 +672,9 @@ struct jvarvalue {
                     INIT_JVARVALUE(&(jvvchars));
                     jstat = jvarvalue_to_chars(jx, &jvvchars, jvv1);
                     if (!jstat) {
-#if USE_JVV_CHARS_POINTER
                         jvar_cat_chars(ajvv1,
                             jvvchars.jvv_val.jvv_val_chars,
                             jvv2->jvv_val.jvv_val_chars);
-#else
-                        jvar_cat_chars(ajvv1,
-                            &(jvvchars.jvv_val.jvv_val_chars),
-                            &(jvv2->jvv_val.jvv_val_chars));
-#endif
                         jvar_free_jvarvalue_data(&jvvchars);
                     }
                     break;
@@ -766,15 +689,9 @@ struct jvarvalue {
             INIT_JVARVALUE(&(jvvchars));
             jstat = jvarvalue_to_chars(jx, &jvvchars, jvv2);
             if (!jstat) {
-#if USE_JVV_CHARS_POINTER
                 jvar_cat_chars(ajvv1,
                     jvv1->jvv_val.jvv_val_chars,
                     jvvchars.jvv_val.jvv_val_chars);
-#else
-                jvar_cat_chars(ajvv1,
-                    &(jvv1->jvv_val.jvv_val_chars),
-                    &(jvvchars.jvv_val.jvv_val_chars));
-#endif
                 jvar_free_jvarvalue_data(&jvvchars);
                 //jvar_free_jvarvalue_data(ajvv2);
             }
@@ -1387,13 +1304,8 @@ static int jexp_compare(struct jrunexec * jx,
         case JVV_DTYPE_CHARS:
             switch (jvv2->jvv_dtype) {
                 case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
                     (*cmpval) = jexp_compare_chars(jvv1->jvv_val.jvv_val_chars,
                                                    jvv2->jvv_val.jvv_val_chars);
-#else
-                    (*cmpval) = jexp_compare_chars(&(jvv1->jvv_val.jvv_val_chars),
-                                                   &(jvv2->jvv_val.jvv_val_chars));
-#endif
                     break;
                 default:
                     jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_COMPARE,
@@ -1612,9 +1524,6 @@ static int jvar_assign_to_reference(struct jrunexec * jx,
         if (vjvvtgt->jvv_dtype == JVV_DTYPE_FUNCVAR) {
             vjvvtgt->jvv_val.jvv_val_funcvar.jvvfv_this_obj = NULL;
         } else if (vjvvtgt->jvv_dtype == JVV_DTYPE_IMETHVAR) {
-#if USE_JVARVALUE_IMETHVAR
-            vjvvtgt->jvv_val.jvv_val_imethvar.jvvimv_this_jvv = NULL;
-#endif
             vjvvtgt->jvv_val.jvv_val_imethvar.jvvimv_this_ptr = NULL;
         }
         jstat = jvar_assign_jvarvalue(jx, vjvvtgt, jvvsrc);
@@ -2008,112 +1917,6 @@ int jvar_parse_function(
     return (jstat);
 }
 /***************************************************************/
-#ifdef OLD_WAY
-int jvar_parse_function_arguments_inactive(
-                    struct jrunexec * jx,
-                    struct jtoken ** pjtok)
-{
-/*
-** 02/11/2021
-*/
-    int jstat = 0;
-    int done;
-
-    done = 0;
-    while (!jstat && !done) {
-        if ((*pjtok)->jtok_typ == JSW_PU && (*pjtok)->jtok_kw == JSPU_CLOSE_PAREN) {
-            done = 1;
-        } else if ((*pjtok)->jtok_typ == JSW_PU && (*pjtok)->jtok_kw == JSPU_DOT_DOT_DOT) {
-            jstat = jrun_next_token(jx, pjtok);
-            if (!jstat) {
-                jstat = jrun_next_token(jx, pjtok);
-            }
-            if (!jstat) {
-                if ((*pjtok)->jtok_typ == JSW_PU && (*pjtok)->jtok_kw == JSPU_CLOSE_PAREN) {
-                    done = 1;
-                } else {
-                    jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERROBJ_SCRIPT_SYNTAX_ERROR,
-                        "Expecting ')' to end argument list. Found: '%s'", (*pjtok)->jtok_text);
-                }
-            }
-        } else {
-            jstat = jrun_next_token(jx, pjtok);
-            if (!jstat) {
-                if ((*pjtok)->jtok_typ == JSW_PU && (*pjtok)->jtok_kw == JSPU_CLOSE_PAREN) {
-                    done = 1;
-                } else if ((*pjtok)->jtok_typ == JSW_PU && (*pjtok)->jtok_kw == JSPU_COMMA) {
-                    jstat = jrun_next_token(jx, pjtok);
-                } else {
-                    jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERROBJ_SCRIPT_SYNTAX_ERROR,
-                        "Expecting ',' or ')' in argument list. Found: '%s'", (*pjtok)->jtok_text);
-                }
-            }
-        }
-    }
-
-    if (!jstat) jstat = jrun_next_token(jx, pjtok);
-
-    return (jstat);
-}
-#endif
-/***************************************************************/
-#ifdef OLD_WAY
-int jexp_eval_function_stmt_inactive(
-                    struct jrunexec * jx,
-                    struct jtoken ** pjtok)
-{
-/*
-** 01/19/2021
-**
-**  On Entry: (*pjtok)->jtok_text = "("
-*/
-    int jstat;
-
-    jstat = jrun_next_token(jx, pjtok);
-    if (!jstat) {
-        jstat = jvar_parse_function_arguments_inactive(jx, pjtok);
-    }
-    if (!jstat) {
-        jstat = jrun_exec_inactive_block(jx, pjtok); /* in: "{"	out:  */
-    }
-
-    return (jstat);
-}
-#endif
-/***************************************************************/
-#ifdef OLD_WAY
-int xxxjrun_exec_function_stmt(
-                    struct jrunexec * jx,
-                    struct jtoken ** pjtok,
-                    int jcmdflags)
-{
-/*
-** 03/22/2021
-*/
-    int jstat = 0;
-    struct jcontext * jcx;
-
-    if ((*pjtok)->jtok_kw == JSPU_STAR) {
-        jstat = jrun_next_token(jx, pjtok);
-        if (jstat) return (jstat);
-    }
-
-    if ((*pjtok)->jtok_typ == JSW_ID || (*pjtok)->jtok_typ == JSW_KW) {
-        if (XSTAT_IS_ACTIVE(jx)) {
-            jstat = jvar_get_block_jcontext(jx, (*pjtok)->jtok_text, &jcx); /* 12/29/2021 */
-        }
-        jstat = jrun_next_token(jx, pjtok);
-        if (jstat) return (jstat);
-    }
-
-    if (!jstat) {
-        jstat = jexp_eval_function_stmt_inactive(jx, pjtok);
-    }
-
-    return (jstat);
-}
-#endif
-/***************************************************************/
 int jrun_exec_function_stmt(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok)
@@ -2213,31 +2016,6 @@ int jrun_exec_return_stmt(
     return (jstat);
 }
 /***************************************************************/
-#ifdef OLD_WAY
-int jexp_eval_rval(struct jrunexec * jx,
-    struct jvarvalue * jvv,
-    struct jvarvalue ** prtnjvv)
-{
-/*
-** 10/25/2021
-*/
-    int jstat = 0;
-
-    if (jvv->jvv_dtype == JVV_DTYPE_LVAL) {
-        (*prtnjvv) = jvv->jvv_val.jvv_lval.jvvv_lval;
-    } else if (jvv->jvv_dtype == JVV_DTYPE_DYNAMIC) {
-        jstat = (jvv->jvv_val.jvv_val_dynamic->jvvy_get_proc)(jx,
-            jvv->jvv_val.jvv_val_dynamic, NULL, prtnjvv);
-        /* free_jvarvalue_dynamic(jvv->jvv_val.jvv_val_dynamic);    */
-        /* INIT_JVARVALUE(jvv);                                     */
-    } else {
-        (*prtnjvv) = jvv;
-    }
-
-    return (jstat);
-}
-#endif
-/***************************************************************/
 int jexp_get_rval(struct jrunexec * jx,
     struct jvarvalue ** ptgtjvv,
     struct jvarvalue * srcjvv,
@@ -2271,30 +2049,6 @@ int jexp_get_rval(struct jrunexec * jx,
     return (jstat);
 }
 /***************************************************************/
-#ifdef OLD_WAY
-static int jvar_parse_function_operand(
-                    struct jrunexec * jx,
-                    struct jtoken ** pjtok,
-                    struct jvarvalue * jvv)
-{
-/*
-** 01/29/2022
-*/
-    int jstat = 0;
-    struct jvarvalue tjvv;
-
-    jstat = jrun_next_token(jx, pjtok);
-    INIT_JVARVALUE(&tjvv);
-    if (!jstat) jstat = jvar_parse_function(jx, pjtok, &tjvv, SKIP_FLAG_HOIST);
-    if (!jstat && tjvv.jvv_dtype == JVV_DTYPE_FUNCTION) {
-        jvv->jvv_dtype = JVV_DTYPE_FUNCVAR;
-        jvv->jvv_val.jvv_val_funcvar.jvvfv_jvvf = tjvv.jvv_val.jvv_val_function;
-        jvv->jvv_val.jvv_val_funcvar.jvvfv_var_jcx = jvar_get_head_jcontext(jx);
-    }
-
-    return (jstat);
-}
-#endif
 static int jvar_parse_function_operand(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok,
@@ -2448,79 +2202,6 @@ static int jexp_eval_primary(
     return (jstat);
 }
 /***************************************************************/
-#if ! PREP_INACTIVE_EXPRESSIONS
-static int jexp_eval_primary_inactive(
-                    struct jrunexec * jx,
-                    struct jtoken ** pjtok)
-{
-/*
-**
-**
-** See also: jprep_eval_primary()
-*/
-    int jstat = 0;
-    struct jtoken next_jtok;
-
-    switch ((*pjtok)->jtok_typ) {
-        case JSW_STRING:
-            jstat = jrun_next_token(jx, pjtok);
-            break;
-
-        case JSW_NUMBER:
-            jstat = jrun_next_token(jx, pjtok);
-            break;
-
-        case JSW_KW:
-            if ((*pjtok)->jtok_kw == JSKW_FUNCTION) {
-                //jstat = jrun_next_token(jx, pjtok);
-                if (!jstat) jstat = jrun_exec_function_stmt(jx, pjtok);
-            } else {
-                jstat = jrun_next_token(jx, pjtok);
-            }
-            break;
-
-        case JSW_ID:
-            jrun_peek_token(jx, &next_jtok);
-            if (next_jtok.jtok_kw == JSPU_OPEN_PAREN) {
-                jstat = jprep_eval_function_call(jx, pjtok, 0);
-            } else {
-                jstat = jrun_next_token(jx, pjtok);
-            }
-            break;
-
-        case JSW_PU:
-            switch ((*pjtok)->jtok_kw) {
-                case JSPU_OPEN_PAREN:
-                    jstat = jrun_next_token(jx, pjtok);
-                    break;
-
-                case JSPU_OPEN_BRACKET:
-                    jstat = jrun_next_token(jx, pjtok);
-                    if (!jstat) jstat = jexp_parse_array_inactive(jx, pjtok);
-                    break;
-
-                case JSPU_OPEN_BRACE:
-                    jstat = jrun_next_token(jx, pjtok);
-                    if (!jstat) jstat = jexp_parse_object_inactive(jx, pjtok);
-                    break;
-
-                default:
-                    jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNEXPECTED_PUNCTUATOR,
-                        "Unexpected 1 punctuator: %s", (*pjtok)->jtok_text);
-                    break;
-            }
-            break;
-
-        default:
-            jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_TOKEN_TYPE,
-                "Invalid token type %d: %s", (*pjtok)->jtok_typ, (*pjtok)->jtok_text);
-            break;
-    }
-
-    return (jstat);
-}
-/***************************************************************/
-#else
 static int jexp_eval_primary_inactive(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok)
@@ -2534,7 +2215,6 @@ static int jexp_eval_primary_inactive(
 
     return (jstat);
 }
-#endif
 /***************************************************************/
 static struct jvarvalue_vallist * jva_new_jvarvalue_vallist(void)
 {
@@ -2721,9 +2401,6 @@ static int jexp_binop_call(struct jrunexec * jx,
                 } else {
                     rtnjvv->jvv_dtype = JVV_DTYPE_IMETHVAR;
                     rtnjvv->jvv_val.jvv_val_imethvar.jvvimv_jvvim = mjvv->jvv_val.jvv_int_method;
-#if USE_JVARVALUE_IMETHVAR
-                    rtnjvv->jvv_val.jvv_val_imethvar.jvvimv_this_jvv = NULL;
-#endif
                     rtnjvv->jvv_val.jvv_val_imethvar.jvvimv_this_ptr = this_ptr;
                     INCIMETHREFS(mjvv->jvv_val.jvv_int_method);
                 }
@@ -2850,15 +2527,11 @@ static int jexp_binop_type_dot(struct jrunexec * jx,
         } else {
             INIT_JVARVALUE(&rtnjvv);
             jstat = jexp_binop_call(jx, jvv, this_ptr, ajvv1, ajvv2->jvv_val.jvv_val_token.jvvt_token, &rtnjvv);
-#if USE_JVARVALUE_IMETHVAR
             if (rtnjvv.jvv_dtype == JVV_DTYPE_IMETHVAR) {
                 rtnjvv.jvv_val.jvv_val_imethvar.jvvimv_this_jvv = jvar_new_jvarvalue();
                 //jstat = jvar_store_jvarvalue(jx, rtnjvv.jvv_val.jvv_val_imethvar.jvvimv_this_jvv, ajvv1);
                 COPY_JVARVALUE(rtnjvv.jvv_val.jvv_val_imethvar.jvvimv_this_jvv, ajvv1);
             }
-#else
-            jvar_free_jvarvalue_data(ajvv1);    /* 03/15/2022 */
-#endif
             COPY_JVARVALUE(ajvv1, &rtnjvv);
             jvar_free_jvarvalue_data(ajvv2);
         }
@@ -2866,6 +2539,28 @@ static int jexp_binop_type_dot(struct jrunexec * jx,
 
     return (jstat);
 }
+/***************************************************************/
+#if ALLOW_INT_CLASS_VARS
+struct jvarvalue * jexp_new_int_class_member(struct jrunexec * jx,
+    struct jvarvalue_internal_class * jvvi,
+    const char * mbrname)
+{
+/*
+** 01/17/2023
+*/
+    struct jvarvalue * mjvv;
+    int vix;
+
+    if (!jvvi->jvvi_jcx) {
+        jvvi->jvvi_jcx = jvar_new_jcontext(jx, jvvi->jvvi_jvar, NULL);
+    }
+
+    vix = jvar_insert_into_jvarrec(jvvi->jvvi_jvar, mbrname);
+    mjvv = jvar_get_jvv_with_expand(jx, jvvi->jvvi_jcx, vix);
+
+    return (mjvv);
+}
+#endif
 /***************************************************************/
 static int jexp_binop_dot(struct jrunexec * jx,
     struct jvarvalue * ajvv1,
@@ -2891,8 +2586,13 @@ static int jexp_binop_dot(struct jrunexec * jx,
         case JVV_DTYPE_INTERNAL_CLASS   :
             mjvv = jvar_int_class_member(jx, cjvv, ajvv2->jvv_val.jvv_val_token.jvvt_token);
             if (!mjvv) {
+#if ALLOW_INT_CLASS_VARS
+                mjvv = jexp_new_int_class_member(jx, cjvv->jvv_val.jvv_jvvi, ajvv2->jvv_val.jvv_val_token.jvvt_token);
+#else
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNDEFINED_CLASS_MEMBER,
-                    "Undefined class member: %s", ajvv2->jvv_val.jvv_val_token.jvvt_token);
+                    "Undefined class member: %s",
+                    ajvv2->jvv_val.jvv_val_token.jvvt_token);
+#endif
             } else if (mjvv->jvv_flags & JCX_FLAG_PROTOTYPE) {
                 DECICLASSHREFS(cjvv->jvv_val.jvv_jvvi);
                 jvar_free_jvarvalue_data(ajvv1);
@@ -2902,15 +2602,10 @@ static int jexp_binop_dot(struct jrunexec * jx,
                 jvar_free_jvarvalue(mjvv);
             } else {
                 DECICLASSHREFS(cjvv->jvv_val.jvv_jvvi);
-#if FIX_220901
                 ajvv1->jvv_dtype = JVV_DTYPE_INTERNAL_METHOD;
                 ajvv1->jvv_val.jvv_int_method = mjvv->jvv_val.jvv_int_method;
                 INCIMETHREFS(mjvv->jvv_val.jvv_int_method);
                 //jvar_free_jvarvalue_data(cjvv);     /* 09/01/2022 */
-#else
-                jvar_store_lval(jx, ajvv1, mjvv, NULL);
-                jvar_free_jvarvalue_data(cjvv);     /* 09/01/2022 */
-#endif
             }
             jvar_free_jvarvalue_data(ajvv2);
             break;
@@ -2919,14 +2614,11 @@ static int jexp_binop_dot(struct jrunexec * jx,
             mjvv = jvar_int_object_member(jx, cjvv, ajvv2->jvv_val.jvv_val_token.jvvt_token);
             if (!mjvv) {
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNDEFINED_CLASS_MEMBER,
-                    "Undefined class member: %s",
+                    "Undefined class member in internal object: %s",
                     ajvv2->jvv_val.jvv_val_token.jvvt_token);
             } else if (mjvv->jvv_dtype == JVV_DTYPE_INTERNAL_METHOD) {
                 ajvv1->jvv_dtype = JVV_DTYPE_IMETHVAR;
                 ajvv1->jvv_val.jvv_val_imethvar.jvvimv_jvvim = mjvv->jvv_val.jvv_int_method;
-#if USE_JVARVALUE_IMETHVAR
-                ajvv1->jvv_val.jvv_val_imethvar.jvvimv_this_jvv = NULL;
-#endif
                 ajvv1->jvv_val.jvv_val_imethvar.jvvimv_this_ptr = cjvv->jvv_val.jvv_jvvo->jvvo_this_ptr;
                 INCIMETHREFS(mjvv->jvv_val.jvv_int_method);
             } else {
@@ -2938,11 +2630,7 @@ static int jexp_binop_dot(struct jrunexec * jx,
             break;
 
         case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
             jstat = jexp_binop_type_dot(jx, cjvv->jvv_dtype, cjvv->jvv_val.jvv_val_chars, ajvv1, ajvv2);
-#else
-            jstat = jexp_binop_type_dot(jx, cjvv->jvv_dtype, &(cjvv->jvv_val.jvv_val_chars), ajvv1, ajvv2);
-#endif
             break;
 
         case JVV_DTYPE_JSINT   :
@@ -2981,11 +2669,7 @@ static int jexp_binop_dot(struct jrunexec * jx,
             break;
 
         default:
-#if USE_JVV_CHARS_POINTER
             jstat = jexp_binop_type_dot(jx, cjvv->jvv_dtype, cjvv->jvv_val.jvv_val_chars, ajvv1, ajvv2);
-#else
-            jstat = jexp_binop_type_dot(jx, cjvv->jvv_dtype, &(cjvv->jvv_val.jvv_val_chars), ajvv1, ajvv2);
-#endif
             /*
             ** 2/15/2022 - Replaced with jexp_binop_type_dot()
             jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_EXP_OBJECT_AFTER_DOT,
@@ -3021,9 +2705,7 @@ struct jexp_exp_rec jexp_exp_list[] = {
     {  4,  0, JSPU_BAR               ,  4, jexp_binop_bitor   , NULL                },
     {  3,  0, JSPU_AMP_AMP           , 20, jexp_binop_logand  , NULL                },
     {  2,  0, JSPU_BAR_BAR           , 12, jexp_binop_logor   , NULL                },
-#if ! DEBUG_OLD_ASSIGN
     {  1,  0, JSPU_EQ                ,  5, jexp_binop_assign   , NULL               },
-#endif
     {  0,  0, 0                      ,  0, NULL               , NULL                }
 };
 /***************************************************************/
@@ -4346,11 +4028,7 @@ int jexp_evaluate_inactive(
 */
     int jstat;
 
-#if PREP_INACTIVE_EXPRESSIONS
     jstat = jprep_expression(jx, pjtok, 0);
-#else
-    jstat = jexp_eval_list_inactive(jx, pjtok);
-#endif
 
     return (jstat);
 }

@@ -185,40 +185,6 @@ int jvar_store_array(
 }
 #endif
 /***************************************************************/
-#if ! PREP_INACTIVE_EXPRESSIONS
-int jexp_parse_array_inactive(
-                    struct jrunexec * jx,
-                    struct jtoken ** pjtok)
-{
-/*
-** 09/28/2021
-**
-** See also: jprep_parse_array_inactive()
-*/
-    int jstat;
-
-    if ((*pjtok)->jtok_kw == JSPU_CLOSE_BRACKET ) {
-        jstat = jrun_next_token(jx, pjtok);
-        return (jstat);
-    }
-
-    jstat = jprep_eval_assignment(jx, pjtok, 0);
-    while (!jstat &&
-           (*pjtok)->jtok_kw == JSPU_COMMA ) {
-        jstat = jrun_next_token(jx, pjtok);
-        if (!jstat) {
-            jstat = jprep_eval_assignment(jx, pjtok, 0);
-        }
-    }
-
-    if (!jstat && (*pjtok)->jtok_kw == JSPU_CLOSE_BRACKET ) {
-        jstat = jrun_next_token(jx, pjtok);
-    }
-
-    return (jstat);
-}
-#endif
-/***************************************************************/
 int jprep_parse_array_inactive(
                     struct jrunexec * jx,
                     struct jtoken ** pjtok,

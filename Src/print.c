@@ -104,15 +104,9 @@ int jpr_int_object_tostring(
             if (!jstat) {
                 if (rtnjvv.jvv_dtype == JVV_DTYPE_CHARS) {
                     (*did_cvt) = 1;
-#if USE_JVV_CHARS_POINTER
                     append_chars(prbuf, prlen, prmax,
                         rtnjvv.jvv_val.jvv_val_chars->jvvc_val_chars,
                         rtnjvv.jvv_val.jvv_val_chars->jvvc_length);
-#else
-                    append_chars(prbuf, prlen, prmax,
-                        rtnjvv.jvv_val.jvv_val_chars.jvvc_val_chars,
-                        rtnjvv.jvv_val.jvv_val_chars.jvvc_length);
-#endif
                 }
                 jvar_free_jvarvalue_data(&rtnjvv);
             }
@@ -286,11 +280,7 @@ int jpr_jvarvalue_tostring(
             break;
 
         case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
             jstat = jpr_chars_tostring(jx, prbuf, prlen, prmax, jvv->jvv_val.jvv_val_chars->jvvc_val_chars, jfmtflags);
-#else
-            jstat = jpr_chars_tostring(jx, prbuf, prlen, prmax, jvv->jvv_val.jvv_val_chars.jvvc_val_chars, jfmtflags);
-#endif
             break;
 
         case JVV_DTYPE_LVAL:

@@ -23,21 +23,6 @@
 #include "stmt.h"
 #include "obj.h"
 
-/***************************************************************/
-/* 02/03/2022                                                  */
-/*      Should compile and work correctly with following       */
-/*      #defines set to either 1 or 0:                         */
-/*         USE_COMMAND_TABLE            stmt.h                 */
-/*         PREP_INACTIVE_EXPRESSIONS    jsexp.h                */
-/*                                                             */
-/*      The preferred value is:                                */
-/*         USE_COMMAND_TABLE            = 3                    */
-/*         PREP_INACTIVE_EXPRESSIONS    = 1                    */
-/*                                                             */
-/*       These #defines should be removed and the unused       */
-/*       code deleted.                                         */
-/***************************************************************/
-
 #define DEBUG_TOKENS    0
 
 // Call C dll from javascript Node.js

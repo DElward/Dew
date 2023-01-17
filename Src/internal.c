@@ -71,6 +71,9 @@ static void jrun_init_internal_class(
     next_jvvi_sn++;
 #endif
     jvv->jvv_val.jvv_jvvi->jvvi_prototype = jint_new_jprototype(jx);
+#if ALLOW_INT_CLASS_VARS
+    jvv->jvv_val.jvv_jvvi->jvvi_jcx = NULL; /* 01/17/2023 */
+#endif
     jvv->jvv_val.jvv_jvvi->jvvi_jvar = jvar_new_jvarrec();
     INCVARRECREFS(jvv->jvv_val.jvv_jvvi->jvvi_jvar);
     jvv->jvv_val.jvv_jvvi->jvvi_nRefs = 0;
@@ -995,20 +998,10 @@ struct jvarvalue_pointer {
         jstat = jrun_ensure_number(jx, &(jvvlargs->jvv_val.jvv_jvvl->jvvl_avals[0]), &fltval, 0);
     }
 
-#ifdef OLD_WAY
-    if (!jstat) {
-        jvvr = jvar_new_jvarvalue_pointer();
-        jvvr->jvvr_jvv.jvv_dtype = JVV_DTYPE_JSFLOAT;
-        jvvr->jvvr_jvv.jvv_val.jvv_val_jsfloat = fltval;
-        jvvrtn->jvv_dtype = JVV_DTYPE_POINTER;
-        jvvrtn->jvv_val.jvv_pointer   = jvvr;
-    }
-#else
     if (!jstat) {
         jvvrtn->jvv_dtype = JVV_DTYPE_JSFLOAT;
         jvvrtn->jvv_val.jvv_val_jsfloat = fltval;
     }
-#endif
 
     return (jstat);
 }
@@ -1295,11 +1288,7 @@ static int jint_isNaN(
             break;
 
         case JVV_DTYPE_CHARS   :
-#if USE_JVV_CHARS_POINTER
             cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars->jvvc_val_chars, &intnum, &dblnum);
-#else
-            cstat = convert_string_to_number(jvv->jvv_val.jvv_val_chars.jvvc_val_chars, &intnum, &dblnum);
-#endif
             if (cstat == 1 || cstat == 2) is_nan = 0;
             break;
 
@@ -1379,11 +1368,7 @@ static int jint_function_require(
         jstat = jrun_ensure_chars(jx, &(jvvlargs->jvv_val.jvv_jvvl->jvvl_avals[0]),
                                     &jvvchars, ENSCHARS_FLAG_ERR);
         if (!jstat) {
-#if USE_JVV_CHARS_POINTER
             jstat = jint_require(jx, jvvchars.jvv_val.jvv_val_chars->jvvc_val_chars, jvvrtn);
-#else
-            jstat = jint_require(jx, jvvchars.jvv_val.jvv_val_chars.jvvc_val_chars, jvvrtn);
-#endif
             jvar_free_jvarvalue_data(&jvvchars);
         }
     } else {

@@ -18,5 +18,5 @@
 #..\vsc\xeqfil-if-Tests.js
 #..\vsc\xeqfil-while-Tests.js
 
-..\vsc\jstest02.js
-#..\vsc\xeqfil-Tests101-Tests.js
+#..\vsc\jstest02.js
+..\vsc\xeqfil-Tests101-Tests.js

@@ -255,7 +255,11 @@ void jvar_free_jvarvalue_internal_class(struct jvarvalue_internal_class * jvvi)
         Free(jvvi->jvvi_class_name);
         /* jvar_free_jvarrec_consts(jvvi->jvvi_jvar); */
         jint_free_jprototype(jvvi->jvvi_prototype);
+#if ALLOW_INT_CLASS_VARS
+        jvar_free_jcontext(jvvi->jvvi_jcx);
+#else
         jvar_free_jvarrec(jvvi->jvvi_jvar);
+#endif
         Free(jvvi);
     }
 }
@@ -934,9 +938,15 @@ struct jvarvalue * jvar_int_class_member(struct jrunexec * jx,
                 INCICLASSHREFS(jvvi);
             } else {
                 pvix = jvar_find_in_jvarrec(jvvi->jvvi_jvar, mbrname);
+#if ALLOW_INT_CLASS_VARS
+                if (pvix && (*pvix) >= 0 && (*pvix) < jvvi->jvvi_jcx->jcx_njvv) {
+                    jvv = jvvi->jvvi_jcx->jcx_ajvv + (*pvix);
+                }
+#else
                 if (pvix && (*pvix) >= 0 && (*pvix) < jvvi->jvvi_jvar->jvar_nconsts) {
                     jvv = &(jvvi->jvvi_jvar->jvar_aconsts[*pvix]);
                 }
+#endif
             }
         }
     }
@@ -1114,6 +1124,9 @@ int jvar_add_class_method(
 */
     int jstat = 0;
     int vix;
+#if ALLOW_INT_CLASS_VARS
+    struct jvarvalue * njvv;
+#endif
 
     vix = jvar_insert_into_jvarrec(cjvv->jvv_val.jvv_jvvi->jvvi_jvar, member_name);
     if (vix < 0) {
@@ -1127,6 +1140,15 @@ int jvar_add_class_method(
         return (jstat);
     } else {
         jvar_new_local_const(cjvv->jvv_val.jvv_jvvi->jvvi_jvar, mjvv, vix);
+#if ALLOW_INT_CLASS_VARS
+        if (cjvv->jvv_dtype != JVV_DTYPE_INTERNAL_CLASS) {
+            jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_EXP_INTERNAL_CLASS,
+                "Expecting internal class for method: %s", member_name);
+        } else {
+            njvv = jvar_get_jvv_with_expand(jx, cjvv->jvv_val.jvv_jvvi->jvvi_jcx, vix);
+            COPY_JVARVALUE(njvv, mjvv);
+        }
+#endif
     }
 
     return (jstat);

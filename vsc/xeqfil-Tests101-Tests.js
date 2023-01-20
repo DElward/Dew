@@ -923,8 +923,10 @@ if (wf101_35.area3() == 15) ngood = ngood + 1; else { console.log("Test 101_35e 
 ////////////////////////////////////////////////////////////////////////
 // Test 101_36 - 01/16/2023 - prototype tests
 ////////////////////////////////////////////////////////////////////////
-String.prototype.v101_36 = 16;
-if (String.prototype.v101_36 == 16) ngood = ngood + 1; else { console.log("Test 101_36a failed"); nerrs = nerrs + 1; }
+String.prototype.v101_36a = 16;
+if (String.prototype.v101_36a == 16) ngood = ngood + 1; else { console.log("Test 101_36a failed"); nerrs = nerrs + 1; }
+String.v101_36b = 32;
+if (String.v101_36b == 32) ngood = ngood + 1; else { console.log("Test 101_36b failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

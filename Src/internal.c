@@ -71,11 +71,13 @@ static void jrun_init_internal_class(
     next_jvvi_sn++;
 #endif
     jvv->jvv_val.jvv_jvvi->jvvi_prototype = jint_new_jprototype(jx);
-#if ALLOW_INT_CLASS_VARS
-    jvv->jvv_val.jvv_jvvi->jvvi_jcx = NULL; /* 01/17/2023 */
-#endif
     jvv->jvv_val.jvv_jvvi->jvvi_jvar = jvar_new_jvarrec();
+#if ALLOW_INT_CLASS_VARS
+    jvv->jvv_val.jvv_jvvi->jvvi_jcx =
+        jvar_new_jcontext(jx, jvv->jvv_val.jvv_jvvi->jvvi_jvar, NULL); /* 01/18/2023 */
+#else
     INCVARRECREFS(jvv->jvv_val.jvv_jvvi->jvvi_jvar);
+#endif
     jvv->jvv_val.jvv_jvvi->jvvi_nRefs = 0;
     jvv->jvv_val.jvv_jvvi->jvvi_class_name = Strdup(class_name);
     if (!superclass) {

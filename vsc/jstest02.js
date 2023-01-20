@@ -19,6 +19,8 @@
 ////////////////////////////////////////////////////////////////////////
 //  String.prototype.v101_36 = 16;
 String.v101_36 = 32;
+//var aa = String.v101_36;
+//console.log("aa=", aa);
 //  if (String.prototype.v101_36 == 16) ngood = ngood + 1; else { console.log("Test 101_36a failed"); nerrs = nerrs + 1; }
 //  console.log("String.prototype.v101_36=", String.prototype.v101_36); // Exp: String.prototype.v101_36= 16
 console.log("String.v101_36=", String.v101_36); // Exp: String.v101_36= 32

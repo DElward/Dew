@@ -4,7 +4,7 @@
 /* jsenv.h                                                     */
 /***************************************************************/
 
-#define ALLOW_INT_CLASS_VARS    0   /* 01/17/2023 */
+#define ALLOW_INT_CLASS_VARS    1   /* 01/17/2023 */
 
 typedef int32 JSINT;
 typedef int32 JSBOOL;

@@ -35,6 +35,10 @@ struct jvv_iterator { /* jvvit_ */
 
 #define JVV_PROTOTYPE_NAME                  "prototype"
 
+#define MBRFLAG_USE_OBJECT      1
+#define MBRFLAG_USE_PROTOTYPE   2
+#define MBRFLAG_USE_BOTH        (MBRFLAG_USE_OBJECT | MBRFLAG_USE_PROTOTYPE)
+
 /***************************************************************/
 
 
@@ -62,8 +66,9 @@ struct jvarvalue * jvar_find_variable(
 void jvar_free_jvarrec(struct jvarrec * jvar);
 void jvar_push_vars(struct jrunexec * jx, struct jvarrec * jvar);
 struct jvarvalue * jvar_int_object_member(struct jrunexec * jx,
-    struct jvarvalue * cjvv,
-    const char * mbrname);
+    struct jvarvalue_int_object * jvvo,
+    const char * mbrname,
+    int mbrflags);
 struct jvarvalue * jvar_int_class_member(struct jrunexec * jx,
     struct jvarvalue * cjvv,
     const char * mbrname);

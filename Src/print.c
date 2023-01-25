@@ -98,7 +98,7 @@ int jpr_int_object_tostring(
     (*did_cvt) = 0;
 
     if (cjvv->jvv_dtype == JVV_DTYPE_INTERNAL_OBJECT) {
-        mjvv = jvar_int_object_member(jx, cjvv, JVV_INTERNAL_METHOD_toString);
+        mjvv = jvar_int_object_member(jx, cjvv->jvv_val.jvv_jvvo, JVV_INTERNAL_METHOD_toString, MBRFLAG_USE_OBJECT);
         if (mjvv && mjvv->jvv_dtype == JVV_DTYPE_INTERNAL_METHOD) {
             jstat = jpr_int_object_call_method(jx, cjvv->jvv_val.jvv_jvvo->jvvo_this_ptr, mjvv, &rtnjvv);
             if (!jstat) {

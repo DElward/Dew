@@ -2373,7 +2373,8 @@ static int jexp_binop_call(struct jrunexec * jx,
     void             * this_ptr,
     struct jvarvalue * jvvargs,
     char * method_name,
-    struct jvarvalue * rtnjvv)
+    struct jvarvalue * rtnjvv,
+    int mbrflags)
 {
 /*
 ** 10/06/2021
@@ -2388,7 +2389,7 @@ static int jexp_binop_call(struct jrunexec * jx,
             break;
 
         case JVV_DTYPE_INTERNAL_OBJECT   :
-            mjvv = jvar_int_object_member(jx, jvv, method_name);
+            mjvv = jvar_int_object_member(jx, jvv->jvv_val.jvv_jvvo, method_name, mbrflags);
             if (!mjvv) {
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNDEFINED_CLASS_MEMBER,
                     "Undefined internal class member: %s", method_name);
@@ -2405,8 +2406,7 @@ static int jexp_binop_call(struct jrunexec * jx,
                     INCIMETHREFS(mjvv->jvv_val.jvv_int_method);
                 }
             } else {
-                jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNSUPPORTED_OPERATION,
-                    "Unsupported class member type: %s", method_name);
+                jstat = jvar_assign_jvarvalue(jx, rtnjvv, mjvv);    /* 01/24/2023 */
             }
             break;
 
@@ -2443,7 +2443,7 @@ static int jexp_binop_type_bracket(struct jrunexec * jx,
             jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_INVALID_TYPE,
                 "Type has no elements. Type=%s", jvar_get_dtype_name(dtype));
         } else {
-            jstat = jexp_binop_call(jx, jvv, this_ptr, jvvparms, JVV_BRACKET_OPERATION, rtnjvv);
+            jstat = jexp_binop_call(jx, jvv, this_ptr, jvvparms, JVV_BRACKET_OPERATION, rtnjvv, MBRFLAG_USE_OBJECT);
         }
     }
 
@@ -2526,7 +2526,7 @@ static int jexp_binop_type_dot(struct jrunexec * jx,
                 "Type has no elements. Type=%s", jvar_get_dtype_name(dtype));
         } else {
             INIT_JVARVALUE(&rtnjvv);
-            jstat = jexp_binop_call(jx, jvv, this_ptr, ajvv1, ajvv2->jvv_val.jvv_val_token.jvvt_token, &rtnjvv);
+            jstat = jexp_binop_call(jx, jvv, this_ptr, ajvv1, ajvv2->jvv_val.jvv_val_token.jvvt_token, &rtnjvv, MBRFLAG_USE_BOTH);
             if (rtnjvv.jvv_dtype == JVV_DTYPE_IMETHVAR) {
                 rtnjvv.jvv_val.jvv_val_imethvar.jvvimv_this_jvv = jvar_new_jvarvalue();
                 //jstat = jvar_store_jvarvalue(jx, rtnjvv.jvv_val.jvv_val_imethvar.jvvimv_this_jvv, ajvv1);
@@ -2621,7 +2621,8 @@ static int jexp_binop_dot(struct jrunexec * jx,
             break;
 
         case JVV_DTYPE_INTERNAL_OBJECT   :
-            mjvv = jvar_int_object_member(jx, cjvv, ajvv2->jvv_val.jvv_val_token.jvvt_token);
+            mjvv = jvar_int_object_member(jx, cjvv->jvv_val.jvv_jvvo,
+                ajvv2->jvv_val.jvv_val_token.jvvt_token, MBRFLAG_USE_OBJECT);
             if (!mjvv) {
                 jstat = jrun_set_error(jx, errtyp_UnimplementedError, JSERR_UNDEFINED_CLASS_MEMBER,
                     "Undefined class member in internal object: %s",

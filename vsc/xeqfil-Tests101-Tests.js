@@ -927,6 +927,10 @@ String.prototype.v101_36a = 16;
 if (String.prototype.v101_36a == 16) ngood = ngood + 1; else { console.log("Test 101_36a failed"); nerrs = nerrs + 1; }
 String.v101_36b = 32;
 if (String.v101_36b == 32) ngood = ngood + 1; else { console.log("Test 101_36b failed"); nerrs = nerrs + 1; }
+String.prototype.prototype = 64;
+if (String.prototype.prototype == 64) ngood = ngood + 1; else { console.log("Test 101_36c failed"); nerrs = nerrs + 1; }
+var v101_36a = "Alpha";
+if (v101_36a.v101_36a == 16) ngood = ngood + 1; else { console.log("Test 101_36d failed"); nerrs = nerrs + 1; }
 ////////////////////////////////////////////////////////////////////////
 if (nerrs == 0) console.log("All", ngood, "tests successful.");
 else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

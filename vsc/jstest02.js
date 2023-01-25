@@ -17,13 +17,9 @@
 //  var printf = false;
 
 ////////////////////////////////////////////////////////////////////////
-//  String.prototype.v101_36 = 16;
-String.v101_36 = 32;
-//var aa = String.v101_36;
-//console.log("aa=", aa);
-//  if (String.prototype.v101_36 == 16) ngood = ngood + 1; else { console.log("Test 101_36a failed"); nerrs = nerrs + 1; }
-//  console.log("String.prototype.v101_36=", String.prototype.v101_36); // Exp: String.prototype.v101_36= 16
-console.log("String.v101_36=", String.v101_36); // Exp: String.v101_36= 32
+String.prototype.v101_36a = 16;
+var ss = "Alpha".v101_36a;
+console.log('"Alpha".v101_36a=', ss); // Exp: ss.v101_36a= 16
 ////////////////////////////////////////////////////////////////////////
 //  if (nerrs == 0) console.log("All", ngood, "tests successful.");
 //  else console.log("****", nerrs, "tests failed, out of", nerrs + ngood);

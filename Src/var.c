@@ -879,35 +879,67 @@ struct jcontext * jvar_get_int_object_jcontext(struct jrunexec * jx,
     return (jcx);
 }
 /***************************************************************/
-struct jvarvalue * jvar_int_object_member(struct jrunexec * jx,
-    struct jvarvalue * cjvv,
+struct jvarvalue * jvar_int_prototype_member(struct jrunexec * jx,
+    struct jvarvalue_internal_class * jvvi,
     const char * mbrname)
 {
 /*
-**
+** 01/24/2023
 */
-    struct jvarvalue *  jvv = NULL;
+    struct jvarvalue *  jvv;
+    int * pvix;
+    struct jprototype * jpt;
+
+    jvv = NULL;
+    if (jvvi) {
+        jpt = jvvi->jvvi_prototype;
+        if (jpt && jpt->jpt_jvar && jpt->jpt_jcx) {
+            pvix = jvar_find_in_jvarrec(jpt->jpt_jvar, mbrname);
+            if (pvix) {
+                jvv = jvar_get_jvv_from_vix(jx, jpt->jpt_jcx, *pvix);
+            }
+        }
+    }
+
+    return (jvv);
+}
+/***************************************************************/
+struct jvarvalue * jvar_int_object_member(struct jrunexec * jx,
+    struct jvarvalue_int_object * jvvo,
+    const char * mbrname,
+    int mbrflags)
+{
+/*
+** 01/24/2023 - Added mbrflags
+*/
+    struct jvarvalue *  jvv;
     struct jcontext * jcx;
     int * pvix;
-    struct jvarvalue_int_object * jvvo;
+    struct jvarvalue_int_object * njvvo;
 
     jvv = NULL;
 
-    if (cjvv) {
-        if (cjvv->jvv_dtype == JVV_DTYPE_INTERNAL_OBJECT) {
-            jvvo = cjvv->jvv_val.jvv_jvvo;
-            pvix = NULL;
-            while (jvvo && !pvix) {
-                jcx = jvar_get_int_object_jcontext(jx, jvvo);
-                pvix = jvar_find_in_jvarrec(jcx->jcx_jvar, mbrname);
-                if (pvix) {
-                    jvv = jvar_get_jvv_from_vix(jx, jcx, *pvix);
-                } else if (jvvo->jvvo_superclass.jvv_dtype == JVV_DTYPE_INTERNAL_OBJECT) {
-                    jvvo = jvvo->jvvo_superclass.jvv_val.jvv_jvvo;
-                } else {
-                    jvvo = NULL;
-                }
+    pvix = NULL;
+    njvvo = jvvo;
+    while (njvvo && !jvv) {
+        if (mbrflags & MBRFLAG_USE_OBJECT) {
+            jcx = jvar_get_int_object_jcontext(jx, njvvo);
+            pvix = jvar_find_in_jvarrec(jcx->jcx_jvar, mbrname);
+            if (pvix) {
+                jvv = jvar_get_jvv_from_vix(jx, jcx, *pvix);
             }
+        }
+        
+        if (!jvv && (mbrflags & MBRFLAG_USE_PROTOTYPE)) {
+            if (njvvo->jvvo_class.jvv_dtype == JVV_DTYPE_INTERNAL_CLASS) {
+                jvv = jvar_int_prototype_member(jx, njvvo->jvvo_class.jvv_val.jvv_jvvi, mbrname);
+            }
+        }
+
+        if (!jvv && (njvvo->jvvo_superclass.jvv_dtype == JVV_DTYPE_INTERNAL_OBJECT)) {
+            njvvo = njvvo->jvvo_superclass.jvv_val.jvv_jvvo;
+        } else {
+            njvvo = NULL;
         }
     }
 
